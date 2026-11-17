@@ -31,6 +31,25 @@ export class WasmEggman {
         }
     }
     /**
+     * Export any built-in pack (`hiv1`, `iav`, `sc2`, `sarbeco`) or loaded `"custom"` pack as a self-contained JSON bundle.
+     * @param {string} pack_id
+     * @returns {string}
+     */
+    export_pack_bundle_json(pack_id) {
+        let deferred2_0;
+        let deferred2_1;
+        try {
+            const ptr0 = passStringToWasm0(pack_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+            const len0 = WASM_VECTOR_LEN;
+            const ret = wasm.wasmeggman_export_pack_bundle_json(this.__wbg_ptr, ptr0, len0);
+            deferred2_0 = ret[0];
+            deferred2_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
      * Return the embedded HIV-1 200-lineage reference compendium as a JSON array.
      * @returns {string}
      */
@@ -63,6 +82,35 @@ export class WasmEggman {
             return getStringFromWasm0(ret[0], ret[1]);
         } finally {
             wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+        }
+    }
+    /**
+     * Load a custom `PathogenProfilePack` JSON (or bare `PathogenSpec` + optional FASTA profiles string) into slot `"custom"`.
+     * @param {string} json_str
+     * @param {string} fasta_override
+     * @returns {string}
+     */
+    load_custom_pack(json_str, fasta_override) {
+        let deferred3_0;
+        let deferred3_1;
+        try {
+            let ptr0, len0, ptr1, len1;
+            try {
+                ptr0 = passStringToWasm0(json_str, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len0 = WASM_VECTOR_LEN;
+                ptr1 = passStringToWasm0(fasta_override, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len1 = WASM_VECTOR_LEN;
+            } catch (e) {
+                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
+                throw e;
+            }
+            const ret = wasm.wasmeggman_load_custom_pack(this.__wbg_ptr, ptr0, len0, ptr1, len1);
+            deferred3_0 = ret[0];
+            deferred3_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
         }
     }
     constructor() {

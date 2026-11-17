@@ -9,6 +9,10 @@ export class WasmEggman {
      */
     detect_pathogen(fasta_text: string): string;
     /**
+     * Export any built-in pack (`hiv1`, `iav`, `sc2`, `sarbeco`) or loaded `"custom"` pack as a self-contained JSON bundle.
+     */
+    export_pack_bundle_json(pack_id: string): string;
+    /**
      * Return the embedded HIV-1 200-lineage reference compendium as a JSON array.
      */
     get_compendium_json(): string;
@@ -16,6 +20,10 @@ export class WasmEggman {
      * Return metadata and reference compendium JSON for a built-in pack (`hiv1`, `iav`, `sc2`, `sarbeco`).
      */
     get_pack_meta_json(pack_id: string): string;
+    /**
+     * Load a custom `PathogenProfilePack` JSON (or bare `PathogenSpec` + optional FASTA profiles string) into slot `"custom"`.
+     */
+    load_custom_pack(json_str: string, fasta_override: string): string;
     constructor();
     /**
      * Legacy HIV-1 FASTA screening entry point preserved for backward compatibility.
@@ -34,8 +42,10 @@ export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_wasmeggman_free: (a: number, b: number) => void;
     readonly wasmeggman_detect_pathogen: (a: number, b: number, c: number) => [number, number];
+    readonly wasmeggman_export_pack_bundle_json: (a: number, b: number, c: number) => [number, number];
     readonly wasmeggman_get_compendium_json: (a: number) => [number, number];
     readonly wasmeggman_get_pack_meta_json: (a: number, b: number, c: number) => [number, number];
+    readonly wasmeggman_load_custom_pack: (a: number, b: number, c: number, d: number, e: number) => [number, number];
     readonly wasmeggman_new: () => number;
     readonly wasmeggman_screen_fasta: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
     readonly wasmeggman_screen_with_pack: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => [number, number];

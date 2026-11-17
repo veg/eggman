@@ -577,6 +577,38 @@ impl PathogenProfilePack {
         }
     }
 
+    /// Construct a `PathogenProfilePack` directly from an in-memory JSON bundle (`PathogenProfilePack` or `PathogenSpec`)
+    /// plus an optional aligned reference FASTA override (useful for browser/WASM custom pack loading).
+    pub fn from_json_and_fasta_str(
+        json_str: &str,
+        profiles_fasta_override: &str,
+    ) -> Result<Self, String> {
+        let mut pack: PathogenProfilePack = match serde_json::from_str::<PathogenProfilePack>(json_str) {
+            Ok(p) => p,
+            Err(pack_err) => match serde_json::from_str::<PathogenSpec>(json_str) {
+                Ok(spec) => PathogenProfilePack {
+                    spec,
+                    profiles_tsv: None,
+                    profiles_fasta: None,
+                    founder_profiles_tsv: None,
+                    founder_profiles_fasta: None,
+                    certified_profiles_tsv: None,
+                    compendium_json: None,
+                },
+                Err(spec_err) => {
+                    return Err(format!(
+                        "invalid JSON bundle: not a PathogenProfilePack ({}) or PathogenSpec ({})",
+                        pack_err, spec_err
+                    ));
+                }
+            },
+        };
+        if !profiles_fasta_override.trim().is_empty() {
+            pack.profiles_fasta = Some(profiles_fasta_override.to_string());
+        }
+        Ok(pack)
+    }
+
     /// Load a pathogen profile pack from either a JSON pack file or a directory containing `manifest.json` / `pack.json`.
     pub fn from_path(path: &Path) -> Result<Self, String> {
         let (manifest_path, base_dir): (std::path::PathBuf, Option<&Path>) = if path.is_dir() {

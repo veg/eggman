@@ -1082,6 +1082,313 @@
       .bottom-left { display: none; }
       .bottom-right { width: 100%; justify-content: flex-end; }
     }
+
+    /* =================================================================== */
+    /* DUAL-DENSITY WORKBENCH (PRO MODE), POPOVERS & 4-GATE SCORECARD     */
+    /* =================================================================== */
+    .pack-chip.clickable, .top-param-pill {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.13s;
+    }
+    .pack-chip.clickable:hover { border-color: var(--border-strong); background: var(--bg-hover); }
+
+    .top-param-pill {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      color: var(--ink-secondary);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 9px;
+      border-radius: 7px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .top-param-pill:hover { border-color: var(--border-strong); color: var(--ink); background: var(--bg-hover); }
+    .top-param-pill.tuned { border-color: var(--purple); background: var(--purple-bg); color: var(--purple); }
+
+    .delta-pill {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 999px;
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid var(--amber-border);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .mode-switch-group {
+      display: inline-flex;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 2px;
+      gap: 2px;
+    }
+    .mode-switch-btn {
+      border: none;
+      background: transparent;
+      color: var(--ink-secondary);
+      font-family: var(--font-sans);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 4px 9px;
+      border-radius: 6px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.12s;
+    }
+    .mode-switch-btn:hover { color: var(--ink); }
+    .mode-switch-btn.active {
+      background: var(--ink);
+      color: #FFFFFF;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.12);
+    }
+
+    .popover-panel {
+      position: fixed;
+      top: 56px;
+      z-index: 120;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      box-shadow: 0 14px 36px rgba(20, 20, 19, 0.18);
+      padding: 14px 16px;
+      width: min(440px, calc(100vw - 24px));
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+    }
+    .popover-menu { width: 280px; padding: 8px; }
+    .popover-item {
+      width: 100%;
+      text-align: left;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 7px;
+      padding: 7px 10px;
+      font-family: var(--font-sans);
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .popover-item:hover { background: var(--bg-subtle); }
+    .popover-item.active { background: var(--orange-soft); border-color: rgba(224,79,22,0.3); color: var(--orange); }
+    .popover-divider { height: 1px; background: var(--border-subtle); margin: 6px 0; }
+
+    .cli-box {
+      background: #1B1A18;
+      color: #EAE7DF;
+      border-radius: 7px;
+      padding: 8px 10px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      line-height: 1.45;
+      word-break: break-all;
+      margin-top: 8px;
+    }
+
+    /* Workbench Cockpit Layout */
+    main.container.pro-wide {
+      max-width: 1620px;
+      padding: 12px 16px 24px;
+    }
+    .wb-telemetry-bar {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 8px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .wb-stat-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+    }
+    .wb-stat-item {
+      display: flex;
+      flex-direction: column;
+      line-height: 1.15;
+    }
+    .wb-stat-lbl {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--ink-muted);
+    }
+    .wb-stat-val {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink);
+    }
+
+    .wb-horizon-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 14px;
+      margin-bottom: 10px;
+    }
+
+    .wb-split-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 450px;
+      gap: 12px;
+      align-items: start;
+    }
+    @media (max-width: 1120px) {
+      .wb-split-grid { grid-template-columns: 1fr; }
+    }
+
+    .wb-master-pane {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 12px 14px;
+      min-width: 0;
+    }
+    .wb-inspector-pane {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      position: sticky;
+      top: 64px;
+      max-height: calc(100vh - 80px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    @media (max-width: 1120px) {
+      .wb-inspector-pane { position: static; max-height: none; }
+    }
+    .wb-inspector-head {
+      padding: 10px 14px;
+      background: var(--bg-subtle);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+    .wb-inspector-body {
+      padding: 12px 14px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .wb-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      border-bottom: 1px solid var(--border-subtle);
+      padding-bottom: 8px;
+      margin-bottom: 10px;
+    }
+    .wb-tab-btn {
+      padding: 5px 10px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      background: var(--bg-subtle);
+      color: var(--ink-secondary);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .wb-tab-btn.active { background: var(--ink); border-color: var(--ink); color: #FFFFFF; }
+
+    .wb-compact-table th { padding: 6px 8px; font-size: 10px; cursor: pointer; user-select: none; }
+    .wb-compact-table td { padding: 5px 8px; font-size: 11.5px; }
+    .wb-compact-table tr.wb-selected { background: var(--orange-soft) !important; box-shadow: inset 3px 0 0 var(--orange); }
+
+    .predicate-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin: 8px 0 10px;
+      align-items: center;
+    }
+    .pred-chip {
+      padding: 3px 8px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      background: var(--bg-subtle);
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      cursor: pointer;
+    }
+    .pred-chip:hover { border-color: var(--border-strong); color: var(--ink); }
+    .pred-chip.active { background: var(--ink); border-color: var(--ink); color: #FFFFFF; }
+
+    /* 4-Gate Guarded Calling Scorecard */
+    .gate-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin: 8px 0 12px;
+    }
+    .gate-tile {
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 7px;
+      padding: 7px 9px;
+      font-size: 11px;
+    }
+    .gate-tile.pass { border-left: 3px solid var(--green); }
+    .gate-tile.fail { border-left: 3px solid var(--orange); background: var(--orange-soft); }
+    .gate-tile.neutral { border-left: 3px solid var(--border-strong); }
+    .gate-title { font-weight: 700; display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px; }
+    .gate-val { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-secondary); }
+
+    .kbd {
+      display: inline-block;
+      padding: 1px 5px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-strong);
+      border-radius: 4px;
+      color: var(--ink);
+    }
+
+    .toast-banner {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 200;
+      background: var(--ink);
+      color: #FFFFFF;
+      padding: 9px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+      transition: opacity 0.18s;
+    }
+
+    @media (max-width: 920px) {
+      .top-param-pill, .delta-pill { display: none; }
+    }
   </style>
 </head>
 <body>
@@ -1095,26 +1402,28 @@
         <span>EGGMAN</span>
       </div>
       <div class="brand-status" id="brandStatus">Loading WASM…</div>
-      <div class="pack-chip" id="packChip" title="Active reference panel — select on Start or Step 1 Alignment">🧬 Panel: Auto-detect</div>
+      <button type="button" class="pack-chip clickable" id="packChip" title="Switch active reference panel or load custom PathogenSpec pack">🧬 Panel: Auto-detect ▾</button>
+      <button type="button" class="top-param-pill" id="topParamsBtn" title="Tune thresholds &amp; inspect CLI command (shortcut: p)">⚙ γ=7.0 · ≥5 SNPs · p&lt;1e-4 ▾</button>
+      <span class="delta-pill hidden" id="paramDeltaBadge" title="Change vs previous parameter run"></span>
     </div>
 
-    <nav class="stage-steps" aria-label="Pipeline Stages">
+    <nav class="stage-steps" id="stageStepperNav" aria-label="Pipeline Stages">
       <button class="stage-step active" id="navLanding" data-view="landing">
         <span class="step-num">⌂</span><span>Start</span>
       </button>
-      <span class="step-arrow">→</span>
+      <span class="step-arrow" id="stepArrow0">→</span>
       <button class="stage-step" id="stepBtn0" data-view="stage0" disabled title="Step 1: Reference detection, alignment, and 8-segment Influenza assembly">
         <span class="step-num">1</span><span>Alignment</span><span class="step-state" id="stepBadge0">—</span>
       </button>
-      <span class="step-arrow">→</span>
+      <span class="step-arrow" id="stepArrow1">→</span>
       <button class="stage-step" id="stepBtn1" data-view="stage1" disabled title="Step 2: Lineage calls and reference coordinate maps">
         <span class="step-num">2</span><span>Lineages</span><span class="step-state" id="stepBadge1">—</span>
       </button>
-      <span class="step-arrow">→</span>
+      <span class="step-arrow" id="stepArrow2">→</span>
       <button class="stage-step" id="stepBtn2" data-view="stage2" disabled title="Step 3: Recombination breakpoints and 2×2 Fisher's exact tests">
         <span class="step-num">3</span><span>Breakpoints</span><span class="step-state" id="stepBadge2">—</span>
       </button>
-      <span class="step-arrow">→</span>
+      <span class="step-arrow" id="stepArrow3">→</span>
       <button class="stage-step" id="stepBtn3" data-view="stage3" disabled title="Step 4: Export tables, FASTA sequences, plots, and reference panel">
         <span class="step-num">4</span><span>Export</span><span class="step-state" id="stepBadge3">—</span>
       </button>
@@ -1122,8 +1431,13 @@
 
     <div class="topbar-actions">
       <input type="file" id="globalFileInput" multiple accept=".fa,.fasta,.fna,.fas,.txt" class="hidden" />
+      <div class="mode-switch-group" role="group" aria-label="Interface Density Mode">
+        <button type="button" class="mode-switch-btn active" id="uiModeGuided" onclick="setUiMode('guided')" title="Guided 4-step workflow (shortcut: m)">🧭 Guided</button>
+        <button type="button" class="mode-switch-btn" id="uiModePro" onclick="setUiMode('pro')" title="High-density split-pane Workbench (shortcut: m)">⚡ Workbench</button>
+      </div>
+      <button type="button" class="top-btn hidden" id="topExportBtn" title="Quick Export menu">↓ Export ▾</button>
       <button class="top-btn" id="btnTopPaste" title="Paste FASTA sequences">Paste</button>
-      <button class="top-btn" id="btnTopGuide" title="Method and reference panel documentation">? Guide</button>
+      <button class="top-btn" id="btnTopGuide" title="Documentation &amp; keyboard shortcuts (?)">? Guide</button>
     </div>
   </header>
 
@@ -1561,6 +1875,105 @@
         <div id="atlasPager"></div>
       </div>
     </section>
+
+    <!-- ================================================================= -->
+    <!-- VIEW: WORKBENCH (PRO SPLIT-PANE COCKPIT)                          -->
+    <!-- ================================================================= -->
+    <section id="workbenchView" class="hidden">
+      <div class="wb-telemetry-bar">
+        <div class="wb-stat-row" id="wbTelemetryStats"></div>
+        <div class="toolbar-group">
+          <span class="badge orange hidden" id="wbBrushBadge"></span>
+          <button type="button" class="btn sm hidden" id="wbClearBrushBtn" onclick="clearCoordBrush()">✕ Clear Brush</button>
+          <span class="control-group-label" style="margin:0 2px 0 4px;">Track:</span>
+          <button type="button" class="seg-pill active" id="wbTrackEpi" onclick="setTrackMode('epi')" title="Circulating + Parental (shortcut: 1)">Circulating (1)</button>
+          <button type="button" class="seg-pill" id="wbTrackBasal" onclick="setTrackMode('basal')" title="Parental Subtypes Only (shortcut: 2)">Parental (2)</button>
+        </div>
+      </div>
+
+      <div class="wb-horizon-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:12.5px;font-weight:700;">Interactive Coordinate Horizon &amp; Breakpoint Histogram</span>
+            <span style="font-size:11px;color:var(--ink-muted);" id="wbHorizonHint">Click any gene/segment or drag across coordinates to brush filter breakpoints</span>
+          </div>
+          <span class="badge mono" id="wbHorizonSpanBadge">—</span>
+        </div>
+        <div id="wbHorizonWrap" style="width:100%;overflow-x:auto;user-select:none;"></div>
+      </div>
+
+      <div class="wb-split-grid">
+        <!-- LEFT MASTER PANE -->
+        <div class="wb-master-pane">
+          <div class="wb-tabs" id="wbTabs">
+            <button type="button" class="wb-tab-btn active" data-wbtab="sequences" onclick="setWbTab('sequences')">Sequences <span class="mono" id="wbTabCountSeq"></span></button>
+            <button type="button" class="wb-tab-btn" data-wbtab="groups" onclick="setWbTab('groups')">Architectures <span class="mono" id="wbTabCountGrp"></span></button>
+            <button type="button" class="wb-tab-btn" data-wbtab="breakpoints" onclick="setWbTab('breakpoints')">Breakpoints <span class="mono" id="wbTabCountBp"></span></button>
+            <button type="button" class="wb-tab-btn hidden" id="wbTabBtnSegs" data-wbtab="segments" onclick="setWbTab('segments')">8-Seg Matrix <span class="mono" id="wbTabCountSeg"></span></button>
+            <button type="button" class="wb-tab-btn" data-wbtab="atlas" onclick="setWbTab('atlas')">Reference Atlas <span class="mono" id="wbTabCountAtlas"></span></button>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <input type="text" class="input-field" style="flex:1;min-width:220px;" id="wbSearch" placeholder="Filter ID or predicate: bp>=2  bp:6000..8500  gene:gp41  parent:A1  stem>=8  p<1e-8  cat:urf" />
+            <button type="button" class="btn sm" onclick="clearWbSearch()" title="Clear search &amp; filters">Reset</button>
+            <span class="mono" style="font-size:11px;color:var(--ink-muted);" id="wbMatchCount">0 shown</span>
+          </div>
+
+          <div class="predicate-chips" id="wbQuickChips">
+            <button type="button" class="pred-chip active" data-wbcat="all" onclick="setWbCatFilter('all')">All</button>
+            <button type="button" class="pred-chip" data-wbcat="clonal" onclick="setWbCatFilter('clonal')">Clonal</button>
+            <button type="button" class="pred-chip" data-wbcat="certified" onclick="setWbCatFilter('certified')">Catalogued</button>
+            <button type="button" class="pred-chip" data-wbcat="urf" onclick="setWbCatFilter('urf')">URF</button>
+            <span style="color:var(--border-strong);">|</span>
+            <button type="button" class="pred-chip" onclick="appendWbToken('bp>=1')">bp&gt;=1</button>
+            <button type="button" class="pred-chip" onclick="appendWbToken('bp>=2')">bp&gt;=2</button>
+            <button type="button" class="pred-chip" onclick="appendWbToken('p<1e-8')">p&lt;1e-8</button>
+            <button type="button" class="pred-chip" onclick="appendWbToken('stem>=8')">stem&gt;=8</button>
+            <span class="kbd" title="Shortcut: / to focus filter, j/k or arrows to scrub rows">/</span>
+          </div>
+
+          <div id="wbAtlasFilterBar" class="segmented-pills hidden" style="margin-bottom:8px;">
+            <button type="button" class="seg-pill active" data-wbs3="active" onclick="setS3AtlasFilter('active')">Active Panel</button>
+            <button type="button" class="seg-pill" data-wbs3="novel" onclick="setS3AtlasFilter('novel')">Novel Circulating</button>
+            <button type="button" class="seg-pill" data-wbs3="demoted" onclick="setS3AtlasFilter('demoted')">Demoted LANL</button>
+            <button type="button" class="seg-pill" data-wbs3="all" onclick="setS3AtlasFilter('all')">All</button>
+          </div>
+
+          <div id="wbBpModeBar" class="segmented-pills hidden" style="margin-bottom:8px;">
+            <button type="button" class="seg-pill active" data-wbbpmode="hotspots" onclick="setWbBpMode('hotspots')">🔥 Grouped Hotspots</button>
+            <button type="button" class="seg-pill" data-wbbpmode="all" onclick="setWbBpMode('all')">📋 All Breakpoints</button>
+          </div>
+
+          <div class="table-scroll">
+            <table class="wb-compact-table">
+              <thead id="wbTableHead"></thead>
+              <tbody id="wbTableBody"></tbody>
+            </table>
+          </div>
+          <div id="wbPager"></div>
+        </div>
+
+        <!-- RIGHT DOCKED FORENSIC INSPECTOR -->
+        <aside class="wb-inspector-pane" id="wbInspectorPane" aria-label="Docked Forensic Sequence Inspector">
+          <div class="wb-inspector-head">
+            <div style="min-width:0;">
+              <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:var(--orange);letter-spacing:0.05em;" id="wbInspKicker">FORENSIC INSPECTOR</div>
+              <div class="mono" style="font-size:13px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" id="wbInspTitle">Select a sequence</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+              <button type="button" class="btn sm" onclick="stepWorkbenchSelection(-1)" title="Previous sequence (k or ↑)">‹</button>
+              <span class="mono" style="font-size:10.5px;color:var(--ink-secondary);padding:0 3px;" id="wbInspCounter">—</span>
+              <button type="button" class="btn sm" onclick="stepWorkbenchSelection(1)" title="Next sequence (j or ↓)">›</button>
+              <button type="button" class="btn sm" onclick="copySelectedFormula()" title="Copy coordinate formula (c)">📋</button>
+              <button type="button" class="btn sm" onclick="expandDockedToDrawer()" title="Open full slide-over drawer">⛶</button>
+            </div>
+          </div>
+          <div class="wb-inspector-body" id="wbInspectorBody">
+            <div style="color:var(--ink-muted);font-size:12.5px;padding:18px 0;text-align:center;">Click any row in the master table or use <span class="kbd">j</span>/<span class="kbd">k</span> to inspect sequence gates and Fisher tests.</div>
+          </div>
+        </aside>
+      </div>
+    </section>
   </main>
 
   <!-- SLIDE-OVER INSPECTOR DRAWER -->
@@ -1659,6 +2072,123 @@
       <div id="examplesList"></div>
     </div>
   </div>
+
+  <!-- FLOATING PANEL SELECTOR POPOVER -->
+  <div class="popover-panel popover-menu hidden" id="packPopover">
+    <div class="control-group-label" style="padding:2px 6px;">Reference Panel</div>
+    <button type="button" class="popover-item" data-poppack="auto" onclick="selectPackFromPopover('auto')"><span>✨ Auto-detect Pathogen</span><span class="mono" style="font-size:10px;opacity:0.7;">auto</span></button>
+    <button type="button" class="popover-item" data-poppack="hiv1" onclick="selectPackFromPopover('hiv1')"><span>HIV-1 Group M (HXB2)</span><span class="mono" style="font-size:10px;opacity:0.7;">hiv1</span></button>
+    <button type="button" class="popover-item" data-poppack="iav" onclick="selectPackFromPopover('iav')"><span>Influenza A (8-Segment)</span><span class="mono" style="font-size:10px;opacity:0.7;">iav</span></button>
+    <button type="button" class="popover-item" data-poppack="sc2" onclick="selectPackFromPopover('sc2')"><span>SARS-CoV-2 (11-Founder)</span><span class="mono" style="font-size:10px;opacity:0.7;">sc2</span></button>
+    <button type="button" class="popover-item" data-poppack="sc2_span16" onclick="loadSpanningSc2Pack()"><span>⚡ SARS-CoV-2 (16-Founder Span)</span><span class="badge orange" style="font-size:9px;padding:1px 5px;">v2</span></button>
+    <button type="button" class="popover-item" data-poppack="sarbeco" onclick="selectPackFromPopover('sarbeco')"><span>Sarbecovirus (Wildlife)</span><span class="mono" style="font-size:10px;opacity:0.7;">sarbeco</span></button>
+    <div class="popover-divider"></div>
+    <button type="button" class="popover-item" onclick="openCustomPackModal()"><span>📂 Load Custom PathogenSpec…</span></button>
+    <button type="button" class="popover-item" onclick="exportActivePackBundle()"><span>⬇ Export Active Pack (.json)</span></button>
+  </div>
+
+  <!-- FLOATING LIVE PARAMETERS & CLI POPOVER -->
+  <div class="popover-panel hidden" id="paramsPopover">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+      <div>
+        <div style="font-size:13.5px;font-weight:700;">Live Breakpoint Thresholds &amp; CLI</div>
+        <div style="font-size:11.5px;color:var(--ink-secondary);">Applies immediately without leaving the current view.</div>
+      </div>
+      <button type="button" class="btn sm" onclick="closePopovers()">✕</button>
+    </div>
+
+    <div class="segmented-pills" style="margin-bottom:10px;">
+      <button type="button" class="btn sm" onclick="applyParamPreset('default'); reapplyParams();">Default (γ=7.0, ≥5)</button>
+      <button type="button" class="btn sm" onclick="applyParamPreset('cov_low'); reapplyParams();">CoV 4-SNP (γ=3.5, ≥3)</button>
+      <button type="button" class="btn sm" onclick="applyParamPreset('strict'); reapplyParams();">Strict (γ=10.5)</button>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div>
+        <label class="control-group-label" style="display:block;">Switch γ (nats; 0 = 7.0)</label>
+        <input type="number" class="input-field" style="width:100%;" id="popParamGamma" value="0" min="0" max="40" step="0.5" />
+      </div>
+      <div>
+        <label class="control-group-label" style="display:block;">Min span (nt; 0 = auto)</label>
+        <input type="number" class="input-field" style="width:100%;" id="popParamMinSpan" value="0" min="0" max="5000" step="10" />
+      </div>
+      <div>
+        <label class="control-group-label" style="display:block;">Min informative SNPs</label>
+        <input type="number" class="input-field" style="width:100%;" id="popParamMinSnps" value="5" min="2" max="25" step="1" />
+      </div>
+      <div>
+        <label class="control-group-label" style="display:block;">Fisher p-value cutoff</label>
+        <select class="input-field" style="width:100%;" id="popParamPThresh">
+          <option value="0.01">1e-2 (CoV 4-SNP)</option>
+          <option value="0.001">1e-3 (Sensitive)</option>
+          <option value="0.0001">1e-4 (Standard)</option>
+          <option value="0.00001">1e-5 (Strict)</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px;gap:8px;">
+      <label style="display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;">
+        <input type="checkbox" id="popParamMaskLoops" checked />
+        Mask hypervariable loops
+      </label>
+      <button type="button" class="btn primary sm" onclick="reapplyParams()">⚡ Apply &amp; Re-run</button>
+    </div>
+
+    <div style="margin-top:12px;border-top:1px solid var(--border-subtle);padding-top:10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span class="control-group-label" style="margin:0;">Equivalent Rust CLI Command</span>
+        <button type="button" class="btn sm" onclick="copyCliCommand()">📋 Copy CLI</button>
+      </div>
+      <div class="cli-box" id="cliCommandPreview">eggman --min-snps 5 --p-thresh 0.0001 --json audit.json input.fasta</div>
+    </div>
+  </div>
+
+  <!-- FLOATING QUICK EXPORT POPOVER -->
+  <div class="popover-panel popover-menu hidden" id="exportPopover">
+    <div class="control-group-label" style="padding:2px 6px;">Quick Export</div>
+    <button type="button" class="popover-item" onclick="closePopovers(); exportCSV();"><span>↓ CSV Table (.csv)</span></button>
+    <button type="button" class="popover-item" onclick="closePopovers(); exportJSON();"><span>↓ Full Audit JSON (.json)</span></button>
+    <button type="button" class="popover-item" onclick="closePopovers(); downloadStitchedFasta();"><span>↓ Aligned / Stitched FASTA</span></button>
+    <button type="button" class="popover-item" onclick="closePopovers(); exportAllBarcodesSVG();"><span>↓ Vector SVG Barcodes</span></button>
+    <button type="button" class="popover-item" onclick="closePopovers(); downloadHTMLDossier();"><span>↓ Standalone HTML Report</span></button>
+  </div>
+
+  <!-- CUSTOM PATHOGENSPEC PACK LOADER MODAL -->
+  <div class="modal-overlay hidden" id="customPackModal">
+    <div class="modal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-size:16px;font-weight:700;">📂 Load Custom PathogenSpec Pack (Browser WASM)</div>
+        <button type="button" class="btn sm" onclick="closeModals()">✕</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--ink-secondary);margin-bottom:10px;">
+        Load a self-contained <code>PathogenProfilePack</code> JSON bundle or a bare <code>PathogenSpec</code> manifest + aligned reference <code>profiles.fasta</code>.
+      </p>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+        <button type="button" class="btn sm primary" onclick="closeModals(); loadSpanningSc2Pack();">⚡ Load 16-Founder SARS-CoV-2 Spanning Pack</button>
+        <label class="btn sm" style="cursor:pointer;">
+          Choose Pack JSON…
+          <input type="file" id="customPackJsonFile" accept=".json" class="hidden" onchange="readCustomPackFile(this, 'json')" />
+        </label>
+        <label class="btn sm" style="cursor:pointer;">
+          Optional Profiles FASTA…
+          <input type="file" id="customPackFastaFile" accept=".fa,.fasta,.fna,.txt" class="hidden" onchange="readCustomPackFile(this, 'fasta')" />
+        </label>
+      </div>
+      <div class="control-group-label">Pack Bundle JSON (or PathogenSpec JSON)</div>
+      <textarea class="fasta-area" id="customPackJsonInput" style="min-height:110px;" spellcheck="false" placeholder='{"spec": {"pack_version": "...", ...}, "profiles_fasta": ">..."}'></textarea>
+      <div class="control-group-label" style="margin-top:8px;">Optional Reference Profiles FASTA Override</div>
+      <textarea class="fasta-area" id="customPackFastaInput" style="min-height:70px;" spellcheck="false" placeholder="Leave blank if embedded inside JSON bundle…"></textarea>
+      <div id="customPackStatus" class="mono" style="font-size:11.5px;color:var(--ink-secondary);margin-top:8px;"></div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+        <button type="button" class="btn" onclick="closeModals()">Cancel</button>
+        <button type="button" class="btn primary" onclick="submitCustomPack()">Load &amp; Screen →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION -->
+  <div class="toast-banner hidden" id="toastBanner"></div>
 
   <script type="module">
     import init, { WasmEggman } from './pkg/eggman_wasm.js';
@@ -1896,6 +2426,7 @@
     const state = {
       wasmReady: false,
       running: false,
+      uiMode: (typeof localStorage !== 'undefined' && localStorage.getItem('eggman_ui_mode')) || 'guided',
       activeView: 'landing',
       selectedPack: 'auto',
       launchMode: 'auto',
@@ -1921,6 +2452,23 @@
       s3AtlasFilter: 'active',
       s3AtlasPage: 1,
       s3AtlasPageSize: 100,
+      // Workbench (Pro) cockpit state
+      wbTab: 'sequences',
+      wbCatFilter: 'all',
+      wbSearch: '',
+      wbBpMode: 'hotspots',
+      wbSortCol: 'idx',
+      wbSortDir: 1,
+      wbPage: 1,
+      wbPageSize: 50,
+      selectedSeqIdx: 0,
+      highlightBpIdx: null,
+      coordBrush: null,
+      customPackMeta: null,
+      loadedCustomPackBundle: null,
+      customSpan16Loaded: false,
+      previousRunSnapshot: null,
+      openPopoverId: null,
       rawFasta: '',
       packMetas: {},
       response: null,
@@ -2023,6 +2571,14 @@
         );
         return { ok: true, type: 'screen', response: JSON.parse(raw), elapsedMs: performance.now() - t0 };
       }
+      if (type === 'load_custom_pack') {
+        const res = JSON.parse(w.load_custom_pack(payload.jsonStr || '', payload.fastaStr || ''));
+        return { ok: true, type: 'load_custom_pack', ...res };
+      }
+      if (type === 'export_pack') {
+        const bundle = w.export_pack_bundle_json(payload.packId || 'hiv1');
+        return { ok: true, type: 'export_pack', bundle };
+      }
       throw new Error(`Unsupported action ${type}`);
     }
 
@@ -2108,7 +2664,16 @@
         state.s2Search = '';
         state.s3AtlasFilter = 'active';
         state.s3AtlasPage = 1;
-        ['s0SegSearch', 's0QaSearch', 's1Search', 's2Search', 'atlasSearch'].forEach(id => {
+        state.wbSearch = '';
+        state.wbCatFilter = 'all';
+        state.wbPage = 1;
+        state.selectedSeqIdx = 0;
+        state.highlightBpIdx = null;
+        state.coordBrush = null;
+        state.previousRunSnapshot = null;
+        const deltaBadge = document.getElementById('paramDeltaBadge');
+        if (deltaBadge) deltaBadge.classList.add('hidden');
+        ['s0SegSearch', 's0QaSearch', 's1Search', 's2Search', 'atlasSearch', 'wbSearch'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = '';
         });
@@ -2119,12 +2684,15 @@
           btn.classList.remove('done', 'running');
           badge.textContent = '—';
         }
+        const te = document.getElementById('topExportBtn');
+        if (te) te.classList.add('hidden');
         closeDrawer();
       } else {
         state.s1GroupFilter = null;
         state.s1GroupPage = 1;
         state.s1Page = 1;
         state.s2Page = 1;
+        state.wbPage = 1;
         for (let i = fromStage; i <= 3; i++) {
           const btn = document.getElementById(`stepBtn${i}`);
           const badge = document.getElementById(`stepBadge${i}`);
@@ -2134,49 +2702,227 @@
       }
     };
 
+    let toastTimer = null;
+    window.showToast = function(msg) {
+      const el = document.getElementById('toastBanner');
+      if (!el) return;
+      el.textContent = msg;
+      el.classList.remove('hidden');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.add('hidden'), 2400);
+    };
+
+    window.closePopovers = function() {
+      ['packPopover', 'paramsPopover', 'exportPopover'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
+      state.openPopoverId = null;
+    };
+
+    window.togglePopover = function(popId, anchorEl) {
+      const target = document.getElementById(popId);
+      if (!target) return;
+      const wasOpen = state.openPopoverId === popId && !target.classList.contains('hidden');
+      window.closePopovers();
+      if (wasOpen) return;
+      if (anchorEl) {
+        const rect = anchorEl.getBoundingClientRect();
+        target.style.top = `${Math.round(rect.bottom + 6)}px`;
+        const alignRight = popId === 'exportPopover';
+        if (alignRight) {
+          target.style.left = 'auto';
+          target.style.right = `${Math.max(12, Math.round(window.innerWidth - rect.right))}px`;
+        } else {
+          target.style.right = 'auto';
+          const left = Math.min(Math.max(12, Math.round(rect.left)), Math.max(12, window.innerWidth - 460));
+          target.style.left = `${left}px`;
+        }
+      }
+      target.classList.remove('hidden');
+      state.openPopoverId = popId;
+      if (popId === 'paramsPopover') syncParamSummaryBadge();
+    };
+
     function syncPackPills() {
       const chip = document.getElementById('packChip');
       if (chip) {
         const resp = state.response;
+        const customName = state.customPackMeta?.pathogen_name || 'Custom Pack';
         if (resp) {
-          const label = PACK_LABELS[resp.active_pack] || resp.active_pack;
-          const how = state.selectedPack === 'auto' ? 'auto-detected' : 'manual';
-          chip.innerHTML = `🧬 ${escapeHtml(label)} <span class="chip-hint">· ${how}</span>`;
+          const label = resp.active_pack === 'custom'
+            ? (state.customSpan16Loaded ? 'SC2 Span-16 (Custom)' : customName)
+            : (PACK_LABELS[resp.active_pack] || resp.active_pack);
+          const how = state.selectedPack === 'auto' ? 'auto' : 'manual';
+          chip.innerHTML = `🧬 ${escapeHtml(label)} <span class="chip-hint">· ${how}</span> ▾`;
         } else {
           chip.innerHTML = state.selectedPack === 'auto'
-            ? '🧬 Panel: Auto-detect'
-            : `🧬 ${escapeHtml(PACK_LABELS[state.selectedPack] || state.selectedPack)} <span class="chip-hint">· manual</span>`;
+            ? '🧬 Panel: Auto-detect ▾'
+            : `🧬 ${escapeHtml(state.selectedPack === 'custom' ? customName : (PACK_LABELS[state.selectedPack] || state.selectedPack))} <span class="chip-hint">· manual</span> ▾`;
         }
         chip.classList.toggle('manual', state.selectedPack !== 'auto');
       }
       document.querySelectorAll('#landingPackPills .seg-pill').forEach(b => {
         b.classList.toggle('active', b.dataset.pack === state.selectedPack);
       });
+      document.querySelectorAll('#packPopover [data-poppack]').forEach(b => {
+        const key = b.dataset.poppack;
+        const isSpan16 = key === 'sc2_span16' && state.selectedPack === 'custom' && state.customSpan16Loaded;
+        const isExact = key === state.selectedPack && !(key === 'custom' && state.customSpan16Loaded);
+        b.classList.toggle('active', isSpan16 || isExact);
+      });
     }
 
     function setSelectedPack(packId) {
+      if (packId !== 'custom') state.customSpan16Loaded = false;
       state.selectedPack = packId;
       syncPackPills();
+      syncParamSummaryBadge();
       if (state.rawFasta && state.activeView !== 'landing') {
         executeScreening(state.rawFasta, state.activeView);
       }
     }
 
+    window.selectPackFromPopover = function(packId) {
+      window.closePopovers();
+      setSelectedPack(packId);
+    };
+
+    window.openCustomPackModal = function() {
+      window.closePopovers();
+      document.getElementById('customPackStatus').textContent = '';
+      document.getElementById('customPackModal').classList.remove('hidden');
+    };
+
+    window.readCustomPackFile = async function(inputEl, kind) {
+      const file = inputEl?.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      if (kind === 'json') {
+        document.getElementById('customPackJsonInput').value = text;
+        document.getElementById('customPackStatus').textContent = `Loaded JSON file: ${file.name} (${text.length.toLocaleString()} bytes)`;
+      } else {
+        document.getElementById('customPackFastaInput').value = text;
+        document.getElementById('customPackStatus').textContent = `Loaded FASTA file: ${file.name} (${text.length.toLocaleString()} bytes)`;
+      }
+    };
+
+    window.submitCustomPack = async function() {
+      const jsonStr = (document.getElementById('customPackJsonInput').value || '').trim();
+      const fastaStr = (document.getElementById('customPackFastaInput').value || '').trim();
+      const stEl = document.getElementById('customPackStatus');
+      if (!jsonStr) { stEl.textContent = 'Paste or choose a PathogenProfilePack / PathogenSpec JSON file first.'; return; }
+      stEl.textContent = 'Loading custom pack into WebAssembly…';
+      try {
+        const res = await callWasm('load_custom_pack', { jsonStr, fastaStr });
+        if (!res.ok) throw new Error(res.error || 'Failed to parse pack');
+        state.customPackMeta = res.meta;
+        state.loadedCustomPackBundle = { jsonStr, fastaStr };
+        state.customSpan16Loaded = false;
+        state.selectedPack = 'custom';
+        syncPackPills();
+        closeModals();
+        showToast(`Loaded custom pack: ${res.meta?.pathogen_name || 'custom'}`);
+        if (state.rawFasta && state.activeView !== 'landing') {
+          executeScreening(state.rawFasta, state.activeView);
+        }
+      } catch (err) {
+        stEl.textContent = 'Error: ' + (err && err.message ? err.message : err);
+      }
+    };
+
+    window.loadSpanningSc2Pack = async function() {
+      window.closePopovers();
+      setLed('busy', 'Loading Span-16…');
+      try {
+        const r = await fetch('./examples/sc2_spanning_16.pack.json');
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const jsonStr = await r.text();
+        const res = await callWasm('load_custom_pack', { jsonStr, fastaStr: '' });
+        if (!res.ok) throw new Error(res.error || 'Pack load failed');
+        state.customPackMeta = res.meta;
+        state.loadedCustomPackBundle = { jsonStr, fastaStr: '' };
+        state.customSpan16Loaded = true;
+        state.selectedPack = 'custom';
+        syncPackPills();
+        setLed('ready', 'Span-16 Ready');
+        showToast('Loaded 16-Founder SARS-CoV-2 Spanning Pack');
+        if (state.rawFasta && state.activeView !== 'landing') {
+          executeScreening(state.rawFasta, state.activeView);
+        }
+      } catch (err) {
+        setLed('error', 'Pack Load Error');
+        alert('Could not load spanning pack: ' + (err && err.message ? err.message : err));
+      }
+    };
+
+    window.exportActivePackBundle = async function() {
+      window.closePopovers();
+      const targetPack = state.response?.active_pack || (state.selectedPack === 'auto' ? 'hiv1' : state.selectedPack);
+      try {
+        const res = await callWasm('export_pack', { packId: targetPack });
+        downloadBlob(res.bundle || '{}', `eggman_${targetPack}_pack.json`, 'application/json');
+        showToast(`Exported ${targetPack} PathogenProfilePack JSON`);
+      } catch (err) {
+        alert('Pack export failed: ' + (err && err.message ? err.message : err));
+      }
+    };
+
     // =========================================================================
-    // NAVIGATION & VIEW RENDERING
+    // NAVIGATION & UI DENSITY MODES (GUIDED vs WORKBENCH)
     // =========================================================================
+    window.setUiMode = function(mode) {
+      state.uiMode = mode === 'pro' ? 'pro' : 'guided';
+      try { localStorage.setItem('eggman_ui_mode', state.uiMode); } catch (e) {}
+      document.getElementById('uiModeGuided').classList.toggle('active', state.uiMode === 'guided');
+      document.getElementById('uiModePro').classList.toggle('active', state.uiMode === 'pro');
+      document.querySelector('main.container').classList.toggle('pro-wide', state.uiMode === 'pro' && state.activeView !== 'landing');
+
+      const isProLoaded = state.uiMode === 'pro' && !!state.response && state.activeView !== 'landing';
+      for (let i = 0; i <= 3; i++) {
+        const b = document.getElementById(`stepBtn${i}`);
+        const ar = document.getElementById(`stepArrow${i}`);
+        if (b) b.classList.toggle('hidden', isProLoaded);
+        if (ar) ar.classList.toggle('hidden', isProLoaded);
+      }
+
+      if (state.response && state.activeView !== 'landing') {
+        if (state.uiMode === 'pro') {
+          window.goView('workbench');
+        } else if (state.activeView === 'workbench') {
+          window.goView('stage1');
+        }
+      }
+    };
+
     window.goView = function(view) {
       if (view !== 'landing' && !state.response) return;
       state.activeView = view;
-      for (const v of ['landing', 'stage0', 'stage1', 'stage2', 'stage3']) {
-        document.getElementById(`${v}View`).classList.toggle('hidden', v !== view);
+      for (const v of ['landing', 'stage0', 'stage1', 'stage2', 'stage3', 'workbench']) {
+        const el = document.getElementById(`${v}View`);
+        if (el) el.classList.toggle('hidden', v !== view);
       }
       document.querySelectorAll('.stage-step').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.view === view);
       });
 
+      const isProLoaded = state.uiMode === 'pro' && view !== 'landing';
+      document.querySelector('main.container').classList.toggle('pro-wide', isProLoaded);
+      for (let i = 0; i <= 3; i++) {
+        const b = document.getElementById(`stepBtn${i}`);
+        const ar = document.getElementById(`stepArrow${i}`);
+        if (b) b.classList.toggle('hidden', isProLoaded);
+        if (ar) ar.classList.toggle('hidden', isProLoaded);
+      }
+
+      if (view === 'workbench') {
+        closeDrawer();
+        renderWorkbench();
+      }
       renderWalkthroughCoach();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (view !== 'workbench') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
     };
 
     // =========================================================================
@@ -2250,15 +2996,64 @@
     }
 
     // =========================================================================
-    // CORE EXECUTION PIPELINE + PREFLIGHT GATE
+    // CORE EXECUTION PIPELINE, CLI SYNC & PREFLIGHT GATE
     // =========================================================================
+    function syncParamInputsFromSource(fromPopover) {
+      const pairs = [
+        ['paramGamma', 'popParamGamma', 'value'],
+        ['paramMinSpan', 'popParamMinSpan', 'value'],
+        ['paramMinSnps', 'popParamMinSnps', 'value'],
+        ['paramPThresh', 'popParamPThresh', 'value'],
+        ['paramMaskLoops', 'popParamMaskLoops', 'checked'],
+      ];
+      pairs.forEach(([s0Id, popId, prop]) => {
+        const s0 = document.getElementById(s0Id);
+        const pop = document.getElementById(popId);
+        if (!s0 || !pop) return;
+        if (fromPopover) s0[prop] = pop[prop];
+        else pop[prop] = s0[prop];
+      });
+    }
+
+    function buildCliCommand(p) {
+      const packArgMap = {
+        hiv1: '',
+        iav: ' --pack packs/influenza_a_8seg',
+        sc2: ' --pack packs/sars_cov2_wuhan',
+        sarbeco: ' --pack packs/sarbecovirus_wuhan',
+        custom: state.customSpan16Loaded ? ' --pack sc2_spanning_16.pack.json' : ' --pack custom_pack.json',
+      };
+      const effPack = state.response?.active_pack || (state.selectedPack === 'auto' ? 'hiv1' : state.selectedPack);
+      const packFlag = packArgMap[effPack] || '';
+      const gammaFlag = p.gamma > 0 ? ` --gamma ${p.gamma}` : '';
+      const spanFlag = p.minSpan > 0 ? ` --min-span ${p.minSpan}` : '';
+      const snpFlag = ` --min-snps ${p.minSnps}`;
+      const pFlag = ` --p-thresh ${p.pThresh}`;
+      const loopFlag = p.maskLoops ? '' : ' --no-loop-mask';
+      return `eggman${packFlag}${gammaFlag}${spanFlag}${snpFlag}${pFlag}${loopFlag} --json audit.json input.fasta`;
+    }
+
+    window.copyCliCommand = function() {
+      const cmd = buildCliCommand(readParamsFromUI());
+      navigator.clipboard?.writeText(cmd);
+      showToast('Copied Rust CLI command');
+    };
+
     function syncParamSummaryBadge() {
+      syncParamInputsFromSource(false);
       const p = readParamsFromUI();
       const gEff = p.gamma === 0 ? 7.0 : p.gamma;
+      const txt = `γ = ${gEff.toFixed(1)} nats · ≥${p.minSnps} SNPs · p < ${p.pThresh.toExponential(0).replace('e-0', 'e-')}`;
       const badge = document.getElementById('paramSummaryBadge');
-      if (badge) {
-        badge.textContent = `γ = ${gEff.toFixed(1)} nats · ≥${p.minSnps} SNPs · p < ${p.pThresh.toExponential(0).replace('e-0', 'e-')}`;
+      if (badge) badge.textContent = txt;
+      const topBtn = document.getElementById('topParamsBtn');
+      if (topBtn) {
+        topBtn.textContent = `⚙ ${txt} ▾`;
+        const isTuned = (p.gamma !== 0 && p.gamma !== 7) || p.minSnps !== 5 || p.pThresh !== 1e-4 || p.minSpan > 0 || !p.maskLoops;
+        topBtn.classList.toggle('tuned', isTuned);
       }
+      const cliEl = document.getElementById('cliCommandPreview');
+      if (cliEl) cliEl.textContent = buildCliCommand(p);
     }
 
     function readParamsFromUI() {
@@ -2276,6 +3071,9 @@
     }
 
     function maybePreflightAndRun(fastaText, targetView = null) {
+      state.previousRunSnapshot = null;
+      const deltaBadge = document.getElementById('paramDeltaBadge');
+      if (deltaBadge) deltaBadge.classList.add('hidden');
       const approxRecords = (fastaText.match(/^>/gm) || []).length || 1;
       const bytes = fastaText.length;
       if (bytes > 8_000_000 || approxRecords > 550) {
@@ -2299,6 +3097,31 @@
       executeScreening(fastaText, targetView);
     }
 
+    function computeRunDeltaBadge(prevSnap, newResp) {
+      const badge = document.getElementById('paramDeltaBadge');
+      if (!badge) return;
+      if (!prevSnap || !newResp || !newResp.results || prevSnap.resultsLen !== newResp.results.length) {
+        badge.classList.add('hidden');
+        return;
+      }
+      const newBps = newResp.results.reduce((a, r) => a + (r.n_breakpoints || 0), 0);
+      const bpDelta = newBps - prevSnap.nBps;
+      let changedCalls = 0;
+      newResp.results.forEach((r, i) => {
+        if (prevSnap.calls[i] !== `${r.called_lineage}|${r.called_category}`) changedCalls += 1;
+      });
+      if (bpDelta === 0 && changedCalls === 0) {
+        badge.textContent = 'Δ: no change';
+        badge.classList.remove('hidden');
+        return;
+      }
+      const parts = [];
+      if (bpDelta !== 0) parts.push(`${bpDelta > 0 ? '+' : ''}${bpDelta} BP`);
+      if (changedCalls > 0) parts.push(`${changedCalls} call${changedCalls === 1 ? '' : 's'} changed`);
+      badge.textContent = `Δ: ${parts.join(' · ')}`;
+      badge.classList.remove('hidden');
+    }
+
     async function executeScreening(fastaText, targetView = null) {
       const cleaned = (fastaText || '').trim();
       if (!cleaned) return;
@@ -2308,6 +3131,9 @@
         // Cancel in-flight worker cleanly
         spawnWorker();
         await callWasm('init', {});
+        if (state.loadedCustomPackBundle) {
+          await callWasm('load_custom_pack', state.loadedCustomPackBundle);
+        }
       }
 
       state.running = true;
@@ -2343,6 +3169,8 @@
           b.classList.remove('running');
           b.classList.add('done');
         }
+        const topEx = document.getElementById('topExportBtn');
+        if (topEx) topEx.classList.remove('hidden');
 
         document.getElementById('stepBadge0').textContent = asm.was_multi_record_assembled
           ? `${asm.raw_record_count}→${results.length}`
@@ -2354,8 +3182,9 @@
         document.getElementById('stepBadge2').textContent = `${nBps} BPs`;
         document.getElementById('stepBadge3').textContent = `${activeRefCount} refs`;
         syncPackPills();
+        computeRunDeltaBadge(state.previousRunSnapshot, resp);
 
-        const shortPack = { hiv1: 'HIV-1', iav: 'IAV 8-Seg', sc2: 'SC2', sarbeco: 'Sarbeco' }[resp.active_pack] || resp.active_pack;
+        const shortPack = { hiv1: 'HIV-1', iav: 'IAV 8-Seg', sc2: 'SC2', sarbeco: 'Sarbeco', custom: 'Custom' }[resp.active_pack] || resp.active_pack;
         setLed('ready', `Ready • ${shortPack}`);
 
         renderStage0();
@@ -2364,7 +3193,10 @@
         renderStage3();
 
         const hasUnaligned = results.some(r => r.n_segments === 0 || r.called_category === 'Unclassifiable');
-        const dest = targetView || ((asm.was_multi_record_assembled || hasUnaligned) ? 'stage0' : 'stage1');
+        const defaultDest = state.uiMode === 'pro'
+          ? 'workbench'
+          : ((asm.was_multi_record_assembled || hasUnaligned) ? 'stage0' : 'stage1');
+        const dest = targetView || defaultDest;
         goView(dest);
       } catch (err) {
         state.running = false;
@@ -2576,6 +3408,14 @@
 
     window.reapplyParams = function() {
       if (!state.rawFasta) return;
+      if (state.response && state.response.results) {
+        const resList = state.response.results;
+        state.previousRunSnapshot = {
+          resultsLen: resList.length,
+          nBps: resList.reduce((a, r) => a + (r.n_breakpoints || 0), 0),
+          calls: resList.map(r => `${r.called_lineage}|${r.called_category}`),
+        };
+      }
       flushAnalysisResults(1);
       executeScreening(state.rawFasta, state.activeView);
     };
@@ -2653,22 +3493,145 @@
       return Array.from(groupMap.values()).sort((a, b) => b.count - a.count || a.lin.localeCompare(b.lin));
     }
 
+    // =========================================================================
+    // STRUCTURED PREDICATE FILTER GRAMMAR (SHARED BY GUIDED & WORKBENCH)
+    // =========================================================================
+    function matchesStructuredQuery(r, rawQuery, meta, coordBrush = null) {
+      // Optional active coordinate brush requires breakpoint inside [start, end]
+      if (coordBrush && Number.isFinite(coordBrush.start) && Number.isFinite(coordBrush.end)) {
+        const bps = r.breakpoints || [];
+        if (!bps.some(b => b.bp_hxb2 >= coordBrush.start && b.bp_hxb2 <= coordBrush.end)) {
+          return false;
+        }
+      }
+
+      const trimmed = (rawQuery || '').trim();
+      if (!trimmed) return true;
+
+      const tokens = trimmed.split(/\s+/).filter(Boolean);
+      const plainHay = `${r.sequence_id} ${r.called_lineage} ${r.called_category} ${r.epidemiological_formula} ${r.basal_formula} ${r.structural_formula} ${r.locus_scope} ${r.hxb2_barcode}`.toLowerCase();
+      const sup = r.call_support || null;
+      const bps = r.breakpoints || [];
+      const segs = r.segments || [];
+
+      const evalNumCmp = (val, op, target) => {
+        if (val === null || val === undefined || !Number.isFinite(val)) return false;
+        if (op === '>=') return val >= target;
+        if (op === '<=') return val <= target;
+        if (op === '>') return val > target;
+        if (op === '<') return val < target;
+        return Math.abs(val - target) < 1e-9;
+      };
+
+      for (const rawTok of tokens) {
+        const tok = rawTok.toLowerCase();
+        let m;
+
+        // bp:START..END
+        if ((m = tok.match(/^bp:(\d+)(?:\.\.|-)(\d+)$/))) {
+          const s = Math.min(Number(m[1]), Number(m[2]));
+          const e = Math.max(Number(m[1]), Number(m[2]));
+          if (!bps.some(b => b.bp_hxb2 >= s && b.bp_hxb2 <= e)) return false;
+          continue;
+        }
+
+        // bp>=N, bp<=N, bp>N, bp<N, bp=N
+        if ((m = tok.match(/^bp(>=|<=|>|<|=)(\d+)$/))) {
+          if (!evalNumCmp(r.n_breakpoints || 0, m[1], Number(m[2]))) return false;
+          continue;
+        }
+
+        // gene:NAME or seg:NAME (landmark breakpoint overlap or segment label)
+        if ((m = tok.match(/^(?:gene|seg|locus):([a-z0-9_.-]+)$/))) {
+          const name = m[1];
+          const lm = (meta?.landmarks || []).find(l => l.short_name.toLowerCase() === name || (l.parent_gene && l.parent_gene.toLowerCase() === name));
+          const inSeg = segs.some(s => (s.short_gene || '').toLowerCase().includes(name));
+          const inBpLm = lm ? bps.some(b => b.bp_hxb2 >= lm.start && b.bp_hxb2 <= lm.end) : false;
+          const inScope = (r.locus_scope || '').toLowerCase().includes(name);
+          if (!inSeg && !inBpLm && !inScope) return false;
+          continue;
+        }
+
+        // parent:X or trunk:X
+        if ((m = tok.match(/^(?:parent|trunk):([^\s]+)$/))) {
+          const target = m[1];
+          const hit = (r.constituent_trunks || []).some(t => t.toLowerCase() === target)
+            || segs.some(s => (s.trunk || '').toLowerCase() === target)
+            || bps.some(b => (b.left_trunk || '').toLowerCase() === target || (b.right_trunk || '').toLowerCase() === target);
+          if (!hit) return false;
+          continue;
+        }
+
+        // backbone:X
+        if ((m = tok.match(/^backbone:([^\s]+)$/))) {
+          if ((r.backbone_trunk || '').toLowerCase() !== m[1]) return false;
+          continue;
+        }
+
+        // id>=X / id<=X
+        if ((m = tok.match(/^id(>=|<=|>|<|=)(\d+(?:\.\d+)?)$/))) {
+          const effId = sup ? sup.identity_pct : (segs.length ? segs[0].identity_pct : null);
+          if (!evalNumCmp(effId, m[1], Number(m[2]))) return false;
+          continue;
+        }
+
+        // stem>=N / stem<=N / stem<N
+        if ((m = tok.match(/^stem(>=|<=|>|<|=)(-?\d+)$/))) {
+          if (!sup || !evalNumCmp(sup.net_stem_snps, m[1], Number(m[2]))) return false;
+          continue;
+        }
+
+        // p<VAL / p<=VAL
+        if ((m = tok.match(/^p(<=|<|>=|>)([0-9.e-]+)$/))) {
+          const pTarget = Number(m[2]);
+          if (!Number.isFinite(pTarget)) continue;
+          const minBpP = bps.length ? Math.min(...bps.map(b => b.p_fisher)) : null;
+          const bestP = (minBpP !== null && sup) ? Math.min(minBpP, sup.p_value) : (minBpP !== null ? minBpP : (sup ? sup.p_value : null));
+          if (!evalNumCmp(bestP, m[1], pTarget)) return false;
+          continue;
+        }
+
+        // cat:urf|clonal|certified|unclass
+        if ((m = tok.match(/^cat:([a-z0-9_]+)$/))) {
+          const bucket = classifyResultBucket(r);
+          const wanted = m[1];
+          const catRaw = (r.called_category || '').toLowerCase();
+          if (bucket !== wanted && !catRaw.includes(wanted)) return false;
+          continue;
+        }
+
+        // gate:fail (either URF or unclassifiable / note indicates gate issue)
+        if (tok === 'gate:fail') {
+          if (classifyResultBucket(r) !== 'urf' && !catIsGateFail(r)) return false;
+          continue;
+        }
+
+        // Plain substring fallback
+        if (!plainHay.includes(tok)) return false;
+      }
+      return true;
+    }
+
+    function catIsGateFail(r) {
+      const cat = r.called_category || '';
+      if (cat === 'URF') return true;
+      const note = (r.call_support?.note || '').toLowerCase();
+      return note.includes('fail') || note.includes('fallback') || note.includes('insufficient');
+    }
+
     function filterAndDrawStage1Cards() {
       const resp = state.response;
       if (!resp) return;
       const meta = resp.pack_meta;
       const results = resp.results || [];
-      const q = (document.getElementById('s1Search').value || '').toLowerCase();
+      const q = document.getElementById('s1Search').value || '';
 
       const catFiltered = results.map((r, idx) => ({ r, idx })).filter(({ r }) => {
         const b = classifyResultBucket(r);
         if (state.s1Filter === 'clonal' && b !== 'clonal') return false;
         if (state.s1Filter === 'certified' && b !== 'certified') return false;
         if (state.s1Filter === 'urf' && b !== 'urf') return false;
-        if (q) {
-          const hay = `${r.sequence_id} ${r.called_lineage} ${r.epidemiological_formula} ${r.basal_formula} ${r.structural_formula}`.toLowerCase();
-          if (!hay.includes(q)) return false;
-        }
+        if (q && !matchesStructuredQuery(r, q, meta, null)) return false;
         return true;
       });
 
@@ -2877,9 +3840,19 @@
 
     window.setTrackMode = function(mode) {
       state.trackMode = mode;
-      document.getElementById('trackModeEpi').classList.toggle('active', mode === 'epi');
-      document.getElementById('trackModeBasal').classList.toggle('active', mode === 'basal');
+      const e1 = document.getElementById('trackModeEpi');
+      const b1 = document.getElementById('trackModeBasal');
+      const e2 = document.getElementById('wbTrackEpi');
+      const b2 = document.getElementById('wbTrackBasal');
+      if (e1) e1.classList.toggle('active', mode === 'epi');
+      if (b1) b1.classList.toggle('active', mode === 'basal');
+      if (e2) e2.classList.toggle('active', mode === 'epi');
+      if (b2) b2.classList.toggle('active', mode === 'basal');
       filterAndDrawStage1Cards();
+      if (state.activeView === 'workbench') {
+        renderWorkbenchMaster();
+        renderDockedInspector();
+      }
     };
 
     // =========================================================================
@@ -3242,7 +4215,9 @@
     window.setS3AtlasFilter = function(f) {
       state.s3AtlasFilter = f;
       state.s3AtlasPage = 1;
+      state.wbPage = 1;
       window.renderAtlasTable();
+      if (state.activeView === 'workbench') renderWorkbenchMaster();
     };
 
     window.renderAtlasTable = function() {
@@ -3362,12 +4337,71 @@
       `);
     };
 
-    window.openStage1Drawer = function(idx) {
+    // =========================================================================
+    // UNIFIED FORENSIC INSPECTOR (SHARED BY GUIDED DRAWER & WORKBENCH DOCK)
+    // =========================================================================
+    function buildFourGateScorecardHtml(r, meta) {
+      const sup = r.call_support || null;
+      const cat = r.called_category || '';
+      const noteLow = (sup?.note || '').toLowerCase();
+      const spanLen = Math.max(1, (meta.coding_end || 1) - (meta.coding_start || 1) + 1);
+      const covPct = Math.min(100, ((r.mapped_coding_nt || 0) / spanLen) * 100);
+      const isUnclass = r.n_segments === 0 || cat === 'Unclassifiable';
+      const isUrf = cat === 'URF';
+
+      const g1Fail = isUnclass || noteLow.includes('coverage') || noteLow.includes('insufficient') || noteLow.includes('floor');
+      const g1Cls = g1Fail ? 'fail' : 'pass';
+      const g1Badge = g1Fail ? 'FAIL' : 'PASS';
+      const g1Val = `${(r.mapped_coding_nt || 0).toLocaleString()} nt (${covPct.toFixed(1)}%) • ${r.locus_scope}`;
+
+      const g2Fail = isUnclass || (isUrf && noteLow.includes('dominance'));
+      const g2Cls = isUnclass ? 'fail' : (isUrf ? 'neutral' : (g2Fail ? 'fail' : 'pass'));
+      const g2Badge = isUnclass ? 'FAIL' : (isUrf ? 'URF' : 'PASS');
+      const g2Val = sup ? `${sup.identity_pct.toFixed(2)}% over ${sup.compared_nt.toLocaleString()} nt` : (r.segments?.[0] ? `Top seg ${r.segments[0].identity_pct.toFixed(1)}%` : '—');
+
+      const g3Fail = isUrf && (noteLow.includes('stem') || noteLow.includes('below') || (sup && sup.net_stem_snps < 8));
+      const g3Cls = (sup && g3Fail) ? 'fail' : ((sup && !isUrf) ? 'pass' : 'neutral');
+      const g3Badge = (sup && g3Fail) ? 'FAIL' : ((sup && !isUrf) ? 'PASS' : 'SCANNED');
+      const g3Val = sup ? `${sup.net_stem_snps >= 0 ? '+' : ''}${sup.net_stem_snps} stem SNPs · p=${sup.p_value.toExponential(1)}` : 'No Tier-2 stem template';
+
+      const g4Fail = noteLow.includes('kadane') || noteLow.includes('residual') || (isUrf && !isUnclass);
+      const g4Cls = isUnclass ? 'neutral' : (g4Fail ? 'fail' : 'pass');
+      const g4Badge = isUnclass ? '—' : (isUrf ? 'FALLBACK' : (noteLow.includes('kadane') ? 'FAIL' : 'PASS'));
+      const g4Val = isUrf
+        ? `Routed to URF (${r.n_breakpoints} verified BP${r.n_breakpoints === 1 ? '' : 's'})`
+        : (sup?.note || 'No third-party residual block');
+
+      return `
+        <div class="gate-grid">
+          <div class="gate-tile ${g1Cls}">
+            <div class="gate-title"><span>Gate 1: Coverage</span><span class="badge ${g1Cls === 'pass' ? 'green' : 'orange'}" style="font-size:9px;padding:1px 5px;">${g1Badge}</span></div>
+            <div class="gate-val">${escapeHtml(g1Val)}</div>
+          </div>
+          <div class="gate-tile ${g2Cls}">
+            <div class="gate-title"><span>Gate 2: Dominance</span><span class="badge ${g2Cls === 'pass' ? 'green' : (g2Cls === 'fail' ? 'orange' : '')}" style="font-size:9px;padding:1px 5px;">${g2Badge}</span></div>
+            <div class="gate-val">${escapeHtml(g2Val)}</div>
+          </div>
+          <div class="gate-tile ${g3Cls}">
+            <div class="gate-title"><span>Gate 3: Clade Stem</span><span class="badge ${g3Cls === 'pass' ? 'green' : (g3Cls === 'fail' ? 'orange' : '')}" style="font-size:9px;padding:1px 5px;">${g3Badge}</span></div>
+            <div class="gate-val">${escapeHtml(g3Val)}</div>
+          </div>
+          <div class="gate-tile ${g4Cls}">
+            <div class="gate-title"><span>Gate 4: Residual Scan</span><span class="badge ${g4Cls === 'pass' ? 'green' : (g4Cls === 'fail' ? 'orange' : '')}" style="font-size:9px;padding:1px 5px;">${g4Badge}</span></div>
+            <div class="gate-val">${escapeHtml(g4Val)}</div>
+          </div>
+        </div>
+      `;
+    }
+
+    function buildUnifiedInspectorHtml(idx, highlightBpIdx = null) {
       const resp = state.response;
-      if (!resp || !resp.results[idx]) return;
+      if (!resp || !resp.results[idx]) return '';
       const r = resp.results[idx];
       const meta = resp.pack_meta;
       const sup = r.call_support;
+      const epiBc = r.epidemiological_barcode || r.hxb2_barcode;
+      const hasDual = epiBc && r.hxb2_barcode && epiBc !== r.hxb2_barcode;
+
       const segRows = (r.segments || []).map(s => `
         <tr>
           <td class="num">#${s.seg_idx}</td>
@@ -3378,47 +4412,98 @@
         </tr>
       `).join('');
 
+      const bpCards = (r.breakpoints || []).map((b, bIdx) => {
+        const isHi = highlightBpIdx === bIdx;
+        return `
+          <div class="card" style="padding:10px 12px;margin-bottom:8px;${isHi ? 'border:2px solid var(--orange);background:var(--orange-soft);' : 'background:var(--bg-subtle);'}">
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px;">
+              <span class="mono" style="font-size:12px;font-weight:700;">BP #${bIdx + 1}: ${escapeHtml(meta.reference_name)} ${b.bp_hxb2} (${escapeHtml(b.left_trunk)} → ${escapeHtml(b.right_trunk)})</span>
+              <span class="badge green" style="font-size:10px;">p=${b.p_fisher.toExponential(2)}</span>
+            </div>
+            <div class="mono" style="font-size:10.5px;color:var(--ink-secondary);margin-bottom:6px;">
+              95% CI: ${b.ci_hxb2_low}–${b.ci_hxb2_high} (${b.ci_width_nt} nt)
+            </div>
+            <div class="table-scroll" style="background:var(--bg-card);">
+              <table class="wb-compact-table">
+                <thead><tr><th>Interval</th><th>${escapeHtml(b.left_trunk)}</th><th>${escapeHtml(b.right_trunk)}</th></tr></thead>
+                <tbody>
+                  <tr><td>Left (&lt; ${b.bp_hxb2})</td><td class="num" style="color:var(--green);font-weight:700;">n11=${b.n11}</td><td class="num">n12=${b.n12}</td></tr>
+                  <tr><td>Right (&ge; ${b.bp_hxb2})</td><td class="num">n21=${b.n21}</td><td class="num" style="color:var(--green);font-weight:700;">n22=${b.n22}</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      const iso = resp.assembly?.isolates?.[idx];
+      let asmSegHtml = '';
+      if (iso && iso.segments && meta.is_segmented) {
+        asmSegHtml = `
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-secondary);margin:12px 0 5px;">8-Segment Records (${iso.n_segments_present}/${iso.total_segments})</div>
+          <div class="table-scroll">
+            <table class="wb-compact-table">
+              <thead><tr><th>Seg</th><th>Span</th><th>Mapped</th><th>Source Header</th></tr></thead>
+              <tbody>
+                ${iso.segments.map(s => `
+                  <tr>
+                    <td class="mono"><strong>${escapeHtml(s.seg_name)}</strong></td>
+                    <td class="num">${s.ref_start}..${s.ref_end}</td>
+                    <td class="num">${s.present ? s.mapped_nt + 'nt' : '—'}</td>
+                    <td class="mono" style="font-size:10px;word-break:break-all;">${escapeHtml(s.source_header || '—')}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        `;
+      }
+
       const matchesHtml = (r.matches || []).map(m =>
-        `<span class="badge" style="margin:2px;">${escapeHtml(m.label)} (${escapeHtml(m.match_type)})</span>`
+        `<span class="badge" style="margin:2px;font-size:10px;">${escapeHtml(m.label)} (${escapeHtml(m.match_type)})</span>`
       ).join('');
 
-      openDrawer('LINEAGE & COORDINATE DETAILS', r.sequence_id, `
-        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
+      return `
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
           <span class="badge blue">${escapeHtml(meta.pathogen_name)}</span>
-          <span class="badge ${r.called_category === 'URF' ? 'orange' : 'green'}">${escapeHtml(r.called_lineage)} [${escapeHtml(formatCategory(r.called_category))}]</span>
-          <span class="badge">${escapeHtml(r.locus_scope)}</span>
+          <span class="badge ${r.called_category === 'URF' ? 'orange' : (r.called_category === 'Unclassifiable' ? 'danger' : 'green')}">${escapeHtml(r.called_lineage)} [${escapeHtml(formatCategory(r.called_category))}]</span>
+          <span class="badge">${escapeHtml(r.locus_scope)} (${r.hxb2_span_start}..${r.hxb2_span_end})</span>
         </div>
         <div class="formula-strip">
-          <div><div class="metric-caption">Circulating Lineage Formula</div><div class="mono" style="font-size:12.5px;color:var(--orange);font-weight:700;">${escapeHtml(r.epidemiological_formula || r.descriptive_name)}</div></div>
-          <div><div class="metric-caption">Parental Subtype Formula</div><div class="mono" style="font-size:12.5px;font-weight:600;">${escapeHtml(r.basal_formula || r.descriptive_name)}</div></div>
+          <div><div class="metric-caption">Circulating Lineage Formula</div><div class="mono" style="font-size:12px;color:var(--orange);font-weight:700;">${escapeHtml(r.epidemiological_formula || r.descriptive_name)}</div></div>
+          <div><div class="metric-caption">Parental Subtype Formula</div><div class="mono" style="font-size:12px;font-weight:600;">${escapeHtml(r.basal_formula || r.descriptive_name)}</div></div>
         </div>
-        <div style="margin:10px 0;">
-          <div class="metric-caption" style="margin-bottom:4px;">Reference Coordinate Map</div>
+        <div style="margin:8px 0;">
+          ${hasDual ? `<div class="metric-caption" style="margin-bottom:3px;">Circulating Track</div>${renderBarcodeSVG(epiBc, meta, 520, false, true)}` : ''}
+          <div class="metric-caption" style="margin:${hasDual ? '6px' : '0'} 0 3px;">Parental Subtype Coordinate Map</div>
           ${renderBarcodeSVG(r.hxb2_barcode, meta, 520, true)}
         </div>
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--ink-secondary);margin:14px 0 6px;">Clade Classification Support</div>
-        <div class="card" style="padding:12px;background:var(--bg-subtle);margin-bottom:12px;">
-          ${sup ? `
-            <div class="mono" style="font-size:12px;">
-              <div><strong>Closest Reference:</strong> ${escapeHtml(r.called_lineage)} (${sup.identity_pct.toFixed(2)}% over ${sup.compared_nt} nt)</div>
-              <div><strong>Net Informative SNP Margin:</strong> ${sup.net_stem_snps >= 0 ? '+' : ''}${sup.net_stem_snps} (Binomial p = ${sup.p_value.toExponential(2)})</div>
-              <div style="margin-top:4px;color:var(--ink-secondary);"><strong>Gate Status:</strong> ${escapeHtml(sup.note)}</div>
-            </div>
-          ` : '<div class="mono" style="font-size:12px;">Uncatalogued (URF) — assigned by parental subtype segmentation.</div>'}
-        </div>
-        ${matchesHtml ? `<div style="margin-bottom:12px;"><div class="metric-caption" style="margin-bottom:4px;">Reference Panel Matches</div>${matchesHtml}</div>` : ''}
-        <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--ink-secondary);margin:10px 0 6px;">Parental Subtype Segments (${r.n_segments})</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-secondary);margin:10px 0 2px;">Four-Gate Guarded Clade Scorecard</div>
+        ${buildFourGateScorecardHtml(r, meta)}
+        ${sup?.note ? `<div class="mono" style="font-size:10.5px;color:var(--ink-secondary);margin-bottom:10px;">Gate detail: ${escapeHtml(sup.note)}</div>` : ''}
+        ${matchesHtml ? `<div style="margin-bottom:10px;"><div class="metric-caption" style="margin-bottom:3px;">Reference Panel Matches</div>${matchesHtml}</div>` : ''}
+        ${bpCards ? `<div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-secondary);margin:10px 0 6px;">Fisher Exact Breakpoint Tests (${r.breakpoints.length})</div>${bpCards}` : ''}
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--ink-secondary);margin:10px 0 5px;">Parental Subtype Segments (${r.n_segments})</div>
         <div class="table-scroll">
-          <table>
+          <table class="wb-compact-table">
             <thead><tr><th>#</th><th>Subtype</th><th>Gene/Seg</th><th>Span</th><th>Identity</th></tr></thead>
             <tbody>${segRows}</tbody>
           </table>
         </div>
+        ${asmSegHtml}
         <div style="margin-top:10px;">
           <div class="metric-caption">Coordinate Barcode with 95% CI</div>
-          <div class="mono" style="font-size:11px;word-break:break-all;background:var(--bg-subtle);padding:8px;border-radius:6px;">${escapeHtml(r.ci_bracketed_barcode)}</div>
+          <div class="mono" style="font-size:10.5px;word-break:break-all;background:var(--bg-subtle);padding:7px;border-radius:6px;">${escapeHtml(r.ci_bracketed_barcode)}</div>
         </div>
-      `);
+      `;
+    }
+
+    window.openStage1Drawer = function(idx) {
+      const resp = state.response;
+      if (!resp || !resp.results[idx]) return;
+      state.selectedSeqIdx = idx;
+      const r = resp.results[idx];
+      openDrawer('LINEAGE & COORDINATE DETAILS', r.sequence_id, buildUnifiedInspectorHtml(idx));
     };
 
     window.openStage1ByPrefix = function(prefix) {
@@ -3479,26 +4564,589 @@
     };
 
     window.openGuideDrawer = function() {
-      openDrawer('DOCUMENTATION', 'Method & Reference Panels', `
-        <h3 style="font-size:14px;margin-bottom:6px;">1. Coordinate Barcodes &amp; Lineage Calls</h3>
-        <p style="font-size:12.5px;color:var(--ink-secondary);margin-bottom:12px;">
-          Each query is aligned to a fixed pathogen coordinate grid. Dynamic programming assigns parental subtypes across intervals (e.g. <code>G0[A1:gp41..nef]</code>), and a four-gate statistical test assigns catalogued circulating lineages or falls back to <code>URF</code>.
+      openDrawer('DOCUMENTATION', 'Method, Shortcuts & Panels', `
+        <h3 style="font-size:14px;margin-bottom:6px;">1. Guided vs. Workbench (Pro) Mode</h3>
+        <p style="font-size:12.5px;color:var(--ink-secondary);margin-bottom:10px;">
+          Switch anytime between <strong>Guided</strong> (4-step walkthrough) and <strong>Workbench</strong> (unified coordinate horizon + predicate table + docked 4-gate inspector) via the top-right toggle or <span class="kbd">m</span>.
         </p>
-        <h3 style="font-size:14px;margin-bottom:6px;">2. Influenza A 8-Segment Assembly</h3>
+        <h3 style="font-size:14px;margin-bottom:6px;">2. Keyboard Shortcuts &amp; Predicate Grammar</h3>
+        <div class="card" style="padding:10px;background:var(--bg-subtle);margin-bottom:12px;font-size:12px;">
+          <div><span class="kbd">/</span> Focus filter &bull; <span class="kbd">j</span>/<span class="kbd">k</span> or <span class="kbd">↓</span>/<span class="kbd">↑</span> Step sequences &bull; <span class="kbd">c</span> Copy formula</div>
+          <div style="margin-top:4px;"><span class="kbd">1</span>/<span class="kbd">2</span> Track mode &bull; <span class="kbd">p</span> Parameters &amp; CLI &bull; <span class="kbd">m</span> Guided/Pro mode</div>
+          <div class="mono" style="font-size:10.5px;margin-top:6px;color:var(--ink-secondary);">Predicates: bp&gt;=2 &nbsp; bp:6000..8500 &nbsp; gene:gp41 &nbsp; parent:A1 &nbsp; backbone:G0 &nbsp; stem&gt;=8 &nbsp; p&lt;1e-8 &nbsp; cat:urf</div>
+        </div>
+        <h3 style="font-size:14px;margin-bottom:6px;">3. Coordinate Barcodes &amp; Four-Gate Guarded Calling</h3>
         <p style="font-size:12.5px;color:var(--ink-secondary);margin-bottom:12px;">
-          Unconcatenated PB2–NS FASTA records group automatically by isolate identifier or disjoint 15-mer segment signatures into a 13,136-nt scaffold. Intra-segment transitions are locked; inter-segment transitions carry 0 penalty. Genotype C2.1 stays <code>URF</code> by default when EA2 and EA1 surface segments share fewer than 8 diagnostic stem SNPs.
+          Each query projects onto fixed pathogen coordinates (e.g. <code>G0[A1:gp41..nef]</code>) via penalized Viterbi DP and Fisher exact breakpoint verification, then checks Gates 1–4 before assigning any catalogued clade or falling back to <code>URF</code>.
         </p>
-        <h3 style="font-size:14px;margin-bottom:6px;">3. Embedded Reference Panels</h3>
+        <h3 style="font-size:14px;margin-bottom:6px;">4. Embedded &amp; Custom Reference Panels</h3>
         <p style="font-size:12.5px;color:var(--ink-secondary);margin-bottom:12px;">
-          Four reference panels run locally inside WebAssembly: <strong>HIV-1 Group M</strong> (HXB2, <code>2026.11-lanl2023</code>), <strong>Influenza A H5N1</strong> (<code>2026.11-genoflu-sra</code>), <strong>SARS-CoV-2</strong> (Wuhan-Hu-1, <code>2026.11-pango-sc2</code>), and <strong>Sarbecovirus</strong> (<code>2026.11-wildlife-sarbeco</code>).
+          Includes <strong>HIV-1 Group M</strong>, <strong>Influenza A H5N1</strong>, <strong>SARS-CoV-2 (11 &amp; 16-founder Span)</strong>, and <strong>Sarbecovirus</strong>. Load or export custom <code>PathogenSpec</code> bundles via the top-left Panel menu.
         </p>
-        <h3 style="font-size:14px;margin-bottom:6px;">4. Source Code</h3>
+        <h3 style="font-size:14px;margin-bottom:6px;">5. Source Code</h3>
         <ul style="font-size:12.5px;color:var(--ink-secondary);padding-left:18px;">
           <li>GitHub Repository &amp; Rust CLI: <a href="https://github.com/veg/eggman" target="_blank">github.com/veg/eggman</a></li>
           <li>Tree-free molecular clock tool <code>ChronAeon</code>: <a href="https://zenodo.org/records/23560893" target="_blank">Zenodo 23560893</a></li>
         </ul>
       `);
     };
+
+    // =========================================================================
+    // WORKBENCH (PRO) SPLIT-PANE COCKPIT ENGINE
+    // =========================================================================
+    function renderWorkbench() {
+      const resp = state.response;
+      if (!resp) return;
+      const meta = resp.pack_meta;
+      const results = resp.results || [];
+
+      let nClonal = 0, nCert = 0, nUrf = 0, nUnclass = 0;
+      const widths = [];
+      let totalBps = 0;
+      results.forEach(r => {
+        const b = classifyResultBucket(r);
+        if (b === 'clonal') nClonal++;
+        else if (b === 'certified') nCert++;
+        else if (b === 'urf') nUrf++;
+        else nUnclass++;
+        (r.breakpoints || []).forEach(bp => {
+          totalBps++;
+          widths.push(bp.ci_width_nt);
+        });
+      });
+      widths.sort((a, b) => a - b);
+      const medCi = widths.length ? `${widths[Math.floor(widths.length / 2)]} nt` : '—';
+      const speed = state.elapsedMs > 0 ? Math.round((results.length * 1000) / state.elapsedMs).toLocaleString() : '—';
+      const activePackLbl = resp.active_pack === 'custom'
+        ? (state.customSpan16Loaded ? 'SC2 Span-16' : (meta.pathogen_name || 'Custom'))
+        : (PACK_LABELS[resp.active_pack] || resp.active_pack);
+
+      document.getElementById('wbTelemetryStats').innerHTML = `
+        <div class="wb-stat-item"><span class="wb-stat-lbl">Panel</span><span class="wb-stat-val" style="font-size:12.5px;">${escapeHtml(activePackLbl)}</span></div>
+        <div class="wb-stat-item"><span class="wb-stat-lbl">Sequences</span><span class="wb-stat-val">${results.length.toLocaleString()}</span></div>
+        <div class="wb-stat-item"><span class="wb-stat-lbl">Clonal</span><span class="wb-stat-val" style="color:var(--green);">${nClonal.toLocaleString()}</span></div>
+        <div class="wb-stat-item"><span class="wb-stat-lbl">Catalogued</span><span class="wb-stat-val" style="color:var(--blue);">${nCert.toLocaleString()}</span></div>
+        <div class="wb-stat-item"><span class="wb-stat-lbl">URF</span><span class="wb-stat-val" style="color:var(--orange);">${nUrf.toLocaleString()}</span></div>
+        <div class="wb-stat-item"><span class="wb-stat-lbl">Breakpoints</span><span class="wb-stat-val">${totalBps.toLocaleString()}</span></div>
+        <div class="wb-stat-item"><span class="wb-stat-lbl">Median CI</span><span class="wb-stat-val">${medCi}</span></div>
+        <div class="wb-stat-item"><span class="wb-stat-lbl">Speed</span><span class="wb-stat-val">${speed} /s</span></div>
+      `;
+
+      const brushBadge = document.getElementById('wbBrushBadge');
+      const clearBtn = document.getElementById('wbClearBrushBtn');
+      if (state.coordBrush) {
+        brushBadge.textContent = `Brush: ${state.coordBrush.label} (${state.coordBrush.start}..${state.coordBrush.end})`;
+        brushBadge.classList.remove('hidden');
+        clearBtn.classList.remove('hidden');
+      } else {
+        brushBadge.classList.add('hidden');
+        clearBtn.classList.add('hidden');
+      }
+
+      const segTabBtn = document.getElementById('wbTabBtnSegs');
+      if (segTabBtn) segTabBtn.classList.toggle('hidden', !meta.is_segmented);
+      if (!meta.is_segmented && state.wbTab === 'segments') state.wbTab = 'sequences';
+
+      document.getElementById('wbTrackEpi').classList.toggle('active', state.trackMode === 'epi');
+      document.getElementById('wbTrackBasal').classList.toggle('active', state.trackMode === 'basal');
+
+      renderWbHorizon();
+      renderWorkbenchMaster();
+      renderDockedInspector();
+    }
+
+    window.clearCoordBrush = function() {
+      state.coordBrush = null;
+      state.wbPage = 1;
+      if (state.activeView === 'workbench') renderWorkbench();
+    };
+
+    window.toggleLandmarkBrush = function(start, end, label) {
+      if (state.coordBrush && state.coordBrush.start === start && state.coordBrush.end === end) {
+        state.coordBrush = null;
+      } else {
+        state.coordBrush = { start, end, label };
+      }
+      state.wbPage = 1;
+      renderWorkbench();
+    };
+
+    function renderWbHorizon() {
+      const resp = state.response;
+      if (!resp) return;
+      const meta = resp.pack_meta;
+      const results = resp.results || [];
+      const cStart = meta.coding_start || 1;
+      const cEnd = meta.coding_end || meta.ref_full_len || 9417;
+      const cSpan = Math.max(1, cEnd - cStart + 1);
+      const W = 1140;
+      const plotX = 16;
+      const plotW = W - plotX * 2;
+      const xOf = (pos) => plotX + ((Math.max(cStart, Math.min(cEnd, pos)) - cStart) / cSpan) * plotW;
+
+      document.getElementById('wbHorizonSpanBadge').textContent = `${meta.reference_name} ${cStart.toLocaleString()}..${cEnd.toLocaleString()} nt`;
+
+      const histTop = 6;
+      const histH = 44;
+      const histBaseY = histTop + histH;
+      const nBins = 75;
+      const binCounts = new Array(nBins).fill(0);
+      results.forEach(r => {
+        (r.breakpoints || []).forEach(b => {
+          const rel = Math.max(0, Math.min(0.9999, (b.bp_hxb2 - cStart) / cSpan));
+          binCounts[Math.floor(rel * nBins)] += 1;
+        });
+      });
+      const maxBin = Math.max(1, ...binCounts);
+      const binW = plotW / nBins;
+
+      let brushOverlay = '';
+      if (state.coordBrush) {
+        const bx1 = xOf(state.coordBrush.start);
+        const bx2 = xOf(state.coordBrush.end);
+        brushOverlay = `<rect x="${bx1.toFixed(1)}" y="${histTop}" width="${Math.max(3, bx2 - bx1).toFixed(1)}" height="${histH + 34}" fill="rgba(224,79,22,0.14)" stroke="#E04F16" stroke-width="1.2"/>`;
+      }
+
+      let histRects = `<rect x="${plotX}" y="${histTop}" width="${plotW}" height="${histH}" fill="#FAF9F6" stroke="#DFDCD4" stroke-width="0.8" rx="4"/>`;
+      binCounts.forEach((cnt, i) => {
+        if (cnt > 0) {
+          const bh = Math.max(2, (cnt / maxBin) * (histH - 8));
+          histRects += `<rect x="${(plotX + i * binW + 0.6).toFixed(1)}" y="${(histBaseY - bh).toFixed(1)}" width="${Math.max(1.5, binW - 1.2).toFixed(1)}" height="${bh.toFixed(1)}" fill="#E04F16" opacity="0.82" rx="1"><title>Window ${Math.round(cStart + (i / nBins) * cSpan)}..${Math.round(cStart + ((i + 1) / nBins) * cSpan)}: ${cnt} breakpoint(s)</title></rect>`;
+        }
+      });
+
+      const lms = (meta.landmarks || []).filter(lm => lm.end >= cStart && lm.start <= cEnd);
+      let prevEnd = [-Infinity, -Infinity];
+      let maxRow = 0;
+      let lmSvg = '';
+      lms.forEach(lm => {
+        let row = lm.start > prevEnd[0] ? 0 : (lm.start > prevEnd[1] ? 1 : (prevEnd[0] <= prevEnd[1] ? 0 : 1));
+        prevEnd[row] = lm.end;
+        maxRow = Math.max(maxRow, row);
+        const sClip = Math.max(lm.start, cStart);
+        const eClip = Math.min(lm.end, cEnd);
+        const gx = xOf(sClip);
+        const gw = Math.max(4, xOf(eClip) - gx);
+        const gy = histBaseY + 6 + row * 17;
+        const isActive = state.coordBrush && state.coordBrush.start === sClip && state.coordBrush.end === eClip;
+        const safeLbl = escapeHtml(lm.short_name).replace(/'/g, '');
+        lmSvg += `<g style="cursor:pointer;" onclick="event.stopPropagation(); toggleLandmarkBrush(${sClip}, ${eClip}, '${safeLbl}')">`;
+        lmSvg += `<rect x="${gx.toFixed(1)}" y="${gy}" width="${gw.toFixed(1)}" height="14" fill="${isActive ? '#E04F16' : '#EFECE6'}" stroke="${isActive ? '#C8430F' : '#9C9A94'}" stroke-width="0.7" rx="2"><title>Click to filter breakpoints inside ${escapeHtml(lm.short_name)} (${sClip}..${eClip})</title></rect>`;
+        if (gw > 22) {
+          lmSvg += `<text x="${(gx + gw / 2).toFixed(1)}" y="${gy + 10.5}" fill="${isActive ? '#FFFFFF' : '#4A4945'}" font-size="9" font-family="Inter, sans-serif" font-weight="700" text-anchor="middle">${escapeHtml(lm.short_name)}</text>`;
+        }
+        lmSvg += `</g>`;
+      });
+
+      const H = histBaseY + 26 + maxRow * 17;
+      const wrap = document.getElementById('wbHorizonWrap');
+      wrap.innerHTML = `<svg id="wbHorizonSvg" viewBox="0 0 ${W} ${H}" width="100%" style="display:block;background:#FFFFFF;border-radius:6px;cursor:crosshair;">${histRects}${brushOverlay}${lmSvg}<rect id="wbDragPreview" x="0" y="${histTop}" width="0" height="${histH}" fill="rgba(224,79,22,0.22)" stroke="#E04F16" stroke-dasharray="3,2" class="hidden"/></svg>`;
+
+      // Interactive drag-to-brush nucleotide interval
+      const svgEl = document.getElementById('wbHorizonSvg');
+      const dragRect = document.getElementById('wbDragPreview');
+      let dragging = false;
+      let startSvgX = 0;
+      const toSvgX = (clientX) => {
+        const rect = svgEl.getBoundingClientRect();
+        return ((clientX - rect.left) / Math.max(1, rect.width)) * W;
+      };
+      const toPos = (svgX) => Math.round(cStart + (Math.max(0, Math.min(1, (svgX - plotX) / plotW)) * cSpan));
+
+      svgEl.onmousedown = (ev) => {
+        if (ev.target.closest && ev.target.closest('g')) return;
+        dragging = true;
+        startSvgX = toSvgX(ev.clientX);
+        dragRect.setAttribute('x', startSvgX.toFixed(1));
+        dragRect.setAttribute('width', '1');
+        dragRect.classList.remove('hidden');
+      };
+      window.onmousemove = (ev) => {
+        if (!dragging) return;
+        const curX = toSvgX(ev.clientX);
+        const x1 = Math.max(plotX, Math.min(startSvgX, curX));
+        const x2 = Math.min(plotX + plotW, Math.max(startSvgX, curX));
+        dragRect.setAttribute('x', x1.toFixed(1));
+        dragRect.setAttribute('width', Math.max(1, x2 - x1).toFixed(1));
+      };
+      window.onmouseup = (ev) => {
+        if (!dragging) return;
+        dragging = false;
+        dragRect.classList.add('hidden');
+        const curX = toSvgX(ev.clientX);
+        if (Math.abs(curX - startSvgX) < 6) return;
+        const p1 = toPos(Math.min(startSvgX, curX));
+        const p2 = toPos(Math.max(startSvgX, curX));
+        if (p2 - p1 >= 20) {
+          state.coordBrush = { start: p1, end: p2, label: `${p1}..${p2}` };
+          state.wbPage = 1;
+          renderWorkbench();
+        }
+      };
+    }
+
+    function getWbFilteredSequences() {
+      const resp = state.response;
+      if (!resp) return [];
+      const meta = resp.pack_meta;
+      const results = resp.results || [];
+      const q = state.wbSearch || '';
+      const filtered = results.map((r, idx) => ({ r, idx })).filter(({ r }) => {
+        const b = classifyResultBucket(r);
+        if (state.wbCatFilter === 'clonal' && b !== 'clonal') return false;
+        if (state.wbCatFilter === 'certified' && b !== 'certified') return false;
+        if (state.wbCatFilter === 'urf' && b !== 'urf') return false;
+        return matchesStructuredQuery(r, q, meta, state.coordBrush);
+      });
+
+      const dir = state.wbSortDir || 1;
+      const col = state.wbSortCol || 'idx';
+      filtered.sort((a, b) => {
+        const ra = a.r, rb = b.r;
+        if (col === 'id') return dir * ra.sequence_id.localeCompare(rb.sequence_id);
+        if (col === 'span') return dir * ((ra.mapped_coding_nt || 0) - (rb.mapped_coding_nt || 0));
+        if (col === 'lineage') return dir * (ra.called_lineage || '').localeCompare(rb.called_lineage || '');
+        if (col === 'formula') return dir * (ra.epidemiological_formula || ra.descriptive_name || '').localeCompare(rb.epidemiological_formula || rb.descriptive_name || '');
+        if (col === 'ident') {
+          const ia = ra.call_support ? ra.call_support.identity_pct : (ra.segments?.[0]?.identity_pct || 0);
+          const ib = rb.call_support ? rb.call_support.identity_pct : (rb.segments?.[0]?.identity_pct || 0);
+          return dir * (ia - ib);
+        }
+        if (col === 'stem') {
+          const sa = ra.call_support ? ra.call_support.net_stem_snps : -9999;
+          const sb = rb.call_support ? rb.call_support.net_stem_snps : -9999;
+          return dir * (sa - sb);
+        }
+        if (col === 'bps') return dir * ((ra.n_breakpoints || 0) - (rb.n_breakpoints || 0));
+        return dir * (a.idx - b.idx);
+      });
+      return filtered;
+    }
+
+    window.sortWbCol = function(col) {
+      if (state.wbSortCol === col) state.wbSortDir = -state.wbSortDir;
+      else { state.wbSortCol = col; state.wbSortDir = (col === 'bps' || col === 'ident' || col === 'stem' || col === 'span') ? -1 : 1; }
+      renderWorkbenchMaster();
+    };
+
+    window.setWbTab = function(tab) {
+      state.wbTab = tab;
+      state.wbPage = 1;
+      renderWorkbenchMaster();
+    };
+
+    window.setWbCatFilter = function(cat) {
+      state.wbCatFilter = cat;
+      state.wbPage = 1;
+      document.querySelectorAll('[data-wbcat]').forEach(b => b.classList.toggle('active', b.dataset.wbcat === cat));
+      renderWorkbenchMaster();
+    };
+
+    window.appendWbToken = function(tok) {
+      const inp = document.getElementById('wbSearch');
+      const cur = (inp.value || '').trim();
+      const parts = cur ? cur.split(/\s+/) : [];
+      if (parts.includes(tok)) {
+        state.wbSearch = parts.filter(x => x !== tok).join(' ');
+      } else {
+        parts.push(tok);
+        state.wbSearch = parts.join(' ');
+      }
+      inp.value = state.wbSearch;
+      state.wbPage = 1;
+      renderWorkbenchMaster();
+    };
+
+    window.clearWbSearch = function() {
+      state.wbSearch = '';
+      state.wbCatFilter = 'all';
+      state.coordBrush = null;
+      state.s1GroupFilter = null;
+      state.wbPage = 1;
+      const inp = document.getElementById('wbSearch');
+      if (inp) inp.value = '';
+      document.querySelectorAll('[data-wbcat]').forEach(b => b.classList.toggle('active', b.dataset.wbcat === 'all'));
+      renderWorkbench();
+    };
+
+    window.setWbBpMode = function(m) { state.wbBpMode = m; state.wbPage = 1; renderWorkbenchMaster(); };
+    window.setWbPage = function(p) { state.wbPage = p; renderWorkbenchMaster(); };
+    window.setWbPageSize = function(sz) { state.wbPageSize = sz; state.wbPage = 1; renderWorkbenchMaster(); };
+
+    window.selectWorkbenchSeq = function(idx, bpIdx = null) {
+      state.selectedSeqIdx = idx;
+      state.highlightBpIdx = bpIdx;
+      renderWorkbenchMaster();
+      renderDockedInspector();
+    };
+
+    window.stepWorkbenchSelection = function(delta) {
+      const list = getWbFilteredSequences();
+      if (!list.length) return;
+      let pos = list.findIndex(x => x.idx === state.selectedSeqIdx);
+      if (pos < 0) pos = 0;
+      else pos = Math.min(list.length - 1, Math.max(0, pos + delta));
+      state.selectedSeqIdx = list[pos].idx;
+      state.highlightBpIdx = null;
+      const neededPage = Math.floor(pos / state.wbPageSize) + 1;
+      if (state.wbTab === 'sequences' && neededPage !== state.wbPage) {
+        state.wbPage = neededPage;
+      }
+      renderWorkbenchMaster();
+      renderDockedInspector();
+    };
+
+    window.copySelectedFormula = function() {
+      const r = state.response?.results?.[state.selectedSeqIdx];
+      if (!r) return;
+      const txt = state.trackMode === 'basal'
+        ? (r.basal_formula || r.descriptive_name)
+        : (r.epidemiological_formula || r.descriptive_name);
+      navigator.clipboard?.writeText(txt);
+      showToast(`Copied formula: ${txt}`);
+    };
+
+    window.expandDockedToDrawer = function() {
+      if (state.response?.results?.[state.selectedSeqIdx]) {
+        window.openStage1Drawer(state.selectedSeqIdx);
+      }
+    };
+
+    function renderWorkbenchMaster() {
+      const resp = state.response;
+      if (!resp) return;
+      const meta = resp.pack_meta;
+      const results = resp.results || [];
+      const seqFiltered = getWbFilteredSequences();
+
+      const groups = computeStage1Groups(seqFiltered, meta);
+      const allBps = [];
+      seqFiltered.forEach(({ r, idx: rIdx }) => {
+        (r.breakpoints || []).forEach((b, bIdx) => {
+          allBps.push({ r, rIdx, b, bIdx, locus: landmarkForPos(b.bp_hxb2, meta) });
+        });
+      });
+
+      const compTotal = (meta.compendium && meta.compendium.length)
+        ? meta.compendium.filter(c => c.category !== 'Demoted_LANL_Entry').length
+        : (meta.trunk_names?.length || 0);
+
+      document.getElementById('wbTabCountSeq').textContent = `(${seqFiltered.length})`;
+      document.getElementById('wbTabCountGrp').textContent = `(${groups.length})`;
+      document.getElementById('wbTabCountBp').textContent = `(${allBps.length})`;
+      if (meta.is_segmented) {
+        document.getElementById('wbTabCountSeg').textContent = `(${resp.assembly?.isolates?.length || results.length})`;
+      }
+      document.getElementById('wbTabCountAtlas').textContent = `(${compTotal})`;
+
+      document.querySelectorAll('#wbTabs .wb-tab-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.wbtab === state.wbTab);
+      });
+      document.getElementById('wbAtlasFilterBar').classList.toggle('hidden', state.wbTab !== 'atlas');
+      document.getElementById('wbBpModeBar').classList.toggle('hidden', state.wbTab !== 'breakpoints');
+      document.getElementById('wbQuickChips').classList.toggle('hidden', state.wbTab === 'atlas');
+
+      const thead = document.getElementById('wbTableHead');
+      const tbody = document.getElementById('wbTableBody');
+      const pager = document.getElementById('wbPager');
+
+      if (state.wbTab === 'sequences') {
+        document.getElementById('wbMatchCount').textContent = `${seqFiltered.length.toLocaleString()} / ${results.length.toLocaleString()}`;
+        const arrow = (c) => state.wbSortCol === c ? (state.wbSortDir > 0 ? ' ▲' : ' ▼') : '';
+        thead.innerHTML = `<tr>
+          <th onclick="sortWbCol('idx')">#${arrow('idx')}</th>
+          <th onclick="sortWbCol('id')">Sequence ID${arrow('id')}</th>
+          <th onclick="sortWbCol('span')">Span${arrow('span')}</th>
+          <th onclick="sortWbCol('lineage')">Lineage Call${arrow('lineage')}</th>
+          <th onclick="sortWbCol('formula')">Formula${arrow('formula')}</th>
+          <th onclick="sortWbCol('ident')">ID%${arrow('ident')}</th>
+          <th onclick="sortWbCol('stem')">Stem${arrow('stem')}</th>
+          <th onclick="sortWbCol('bps')">BPs${arrow('bps')}</th>
+          <th>Track</th>
+        </tr>`;
+
+        const totalPages = Math.max(1, Math.ceil(seqFiltered.length / state.wbPageSize));
+        state.wbPage = Math.min(Math.max(1, state.wbPage), totalPages);
+        const slice = seqFiltered.slice((state.wbPage - 1) * state.wbPageSize, state.wbPage * state.wbPageSize);
+
+        tbody.innerHTML = slice.length
+          ? slice.map(({ r, idx }) => {
+              const cat = r.called_category || (r.is_clonal ? 'Pure_Subtype' : 'URF');
+              const lin = r.called_lineage || r.backbone_trunk;
+              const pill = (r.n_segments === 0 || cat === 'Unclassifiable') ? 'danger' : (cat === 'URF' ? 'orange' : 'green');
+              const formula = state.trackMode === 'basal' ? (r.basal_formula || r.descriptive_name) : (r.epidemiological_formula || r.descriptive_name);
+              const bc = state.trackMode === 'basal' ? r.hxb2_barcode : (r.epidemiological_barcode || r.hxb2_barcode);
+              const sup = r.call_support;
+              const idTxt = sup ? `${sup.identity_pct.toFixed(1)}%` : (r.segments?.[0] ? `${r.segments[0].identity_pct.toFixed(1)}%` : '—');
+              const stemTxt = sup ? `${sup.net_stem_snps >= 0 ? '+' : ''}${sup.net_stem_snps}` : '—';
+              const isSel = state.selectedSeqIdx === idx;
+              return `
+                <tr class="clickable ${isSel ? 'wb-selected' : ''}" onclick="selectWorkbenchSeq(${idx})">
+                  <td class="num" style="color:var(--ink-muted);">${idx + 1}</td>
+                  <td class="mono" style="font-weight:600;max-width:170px;word-break:break-all;">${escapeHtml(r.sequence_id)}</td>
+                  <td class="num">${(r.mapped_coding_nt || 0).toLocaleString()}</td>
+                  <td><span class="badge ${pill}" style="font-size:10px;">${escapeHtml(lin)}</span></td>
+                  <td class="mono" style="color:var(--orange);font-weight:600;max-width:190px;word-break:break-word;">${escapeHtml(formula)}</td>
+                  <td class="num">${idTxt}</td>
+                  <td class="num">${stemTxt}</td>
+                  <td class="num">${r.n_breakpoints || 0}</td>
+                  <td style="min-width:140px;">${renderBarcodeSVG(bc, meta, 160, false, true)}</td>
+                </tr>
+              `;
+            }).join('')
+          : '<tr><td colspan="9" style="text-align:center;color:var(--ink-muted);padding:18px;">No sequences match active predicates / coordinate brush.</td></tr>';
+        pager.innerHTML = renderPager(seqFiltered.length, state.wbPage, state.wbPageSize, 'setWbPage', 'setWbPageSize', [25, 50, 100, 250]);
+        return;
+      }
+
+      if (state.wbTab === 'groups') {
+        document.getElementById('wbMatchCount').textContent = `${groups.length} architecture${groups.length === 1 ? '' : 's'}`;
+        thead.innerHTML = '<tr><th>Count</th><th>Lineage Call</th><th>Formula</th><th>Mean nt</th><th>Mean BPs</th><th>Map</th></tr>';
+        const totalPages = Math.max(1, Math.ceil(groups.length / state.wbPageSize));
+        state.wbPage = Math.min(Math.max(1, state.wbPage), totalPages);
+        const slice = groups.slice((state.wbPage - 1) * state.wbPageSize, state.wbPage * state.wbPageSize);
+        tbody.innerHTML = slice.length
+          ? slice.map(g => {
+              const badgeCls = g.cat === 'Unclassifiable' ? 'danger' : (g.cat === 'URF' ? 'orange' : 'green');
+              const recurrent = (g.cat === 'URF' && g.count >= 3) ? ` <span class="badge amber" style="font-size:9px;">Cluster N=${g.count}</span>` : '';
+              return `
+                <tr class="clickable ${state.selectedSeqIdx === g.repIdx ? 'wb-selected' : ''}" onclick="selectWorkbenchSeq(${g.repIdx})">
+                  <td class="num" style="font-weight:700;">${g.count.toLocaleString()}</td>
+                  <td><span class="badge ${badgeCls}" style="font-size:10px;">${escapeHtml(g.lin)}</span>${recurrent}</td>
+                  <td class="mono" style="color:var(--orange);font-weight:600;max-width:210px;word-break:break-word;">${escapeHtml(g.epiFormula)}</td>
+                  <td class="num">${Math.round(g.sumMapped / g.count).toLocaleString()}</td>
+                  <td class="num">${(g.sumBps / g.count).toFixed(1)}</td>
+                  <td style="min-width:170px;">${renderBarcodeSVG(g.bc, meta, 190, false, true)}</td>
+                </tr>
+              `;
+            }).join('')
+          : '<tr><td colspan="6" style="text-align:center;color:var(--ink-muted);padding:18px;">No architecture groups match.</td></tr>';
+        pager.innerHTML = renderPager(groups.length, state.wbPage, state.wbPageSize, 'setWbPage', 'setWbPageSize', [25, 50, 100]);
+        return;
+      }
+
+      if (state.wbTab === 'breakpoints') {
+        document.querySelectorAll('[data-wbbpmode]').forEach(b => b.classList.toggle('active', b.dataset.wbbpmode === state.wbBpMode));
+        if (state.wbBpMode === 'hotspots') {
+          const hsMap = new Map();
+          allBps.forEach(item => {
+            const bin50 = Math.round(item.b.bp_hxb2 / 50) * 50;
+            const key = `${item.locus}|${item.b.left_trunk}|${item.b.right_trunk}|${bin50}`;
+            if (!hsMap.has(key)) {
+              hsMap.set(key, { locus: item.locus, left: item.b.left_trunk, right: item.b.right_trunk, minPos: item.b.bp_hxb2, maxPos: item.b.bp_hxb2, minP: item.b.p_fisher, rep: item, count: 0 });
+            }
+            const h = hsMap.get(key);
+            h.count += 1;
+            h.minPos = Math.min(h.minPos, item.b.bp_hxb2);
+            h.maxPos = Math.max(h.maxPos, item.b.bp_hxb2);
+            if (item.b.p_fisher < h.minP) { h.minP = item.b.p_fisher; h.rep = item; }
+          });
+          const hsList = Array.from(hsMap.values()).sort((a, b) => b.count - a.count || a.minP - b.minP);
+          document.getElementById('wbMatchCount').textContent = `${hsList.length} hotspots (${allBps.length} BPs)`;
+          thead.innerHTML = '<tr><th>Count</th><th>Region</th><th>Transition</th><th>Position</th><th>Min p_Fisher</th><th>Rep Sequence</th></tr>';
+          const totalPages = Math.max(1, Math.ceil(hsList.length / state.wbPageSize));
+          state.wbPage = Math.min(Math.max(1, state.wbPage), totalPages);
+          const slice = hsList.slice((state.wbPage - 1) * state.wbPageSize, state.wbPage * state.wbPageSize);
+          tbody.innerHTML = slice.length
+            ? slice.map(h => `
+                <tr class="clickable ${state.selectedSeqIdx === h.rep.rIdx ? 'wb-selected' : ''}" onclick="selectWorkbenchSeq(${h.rep.rIdx}, ${h.rep.bIdx})">
+                  <td class="num" style="font-weight:700;">${h.count.toLocaleString()}</td>
+                  <td><span class="badge blue" style="font-size:10px;">${escapeHtml(h.locus)}</span></td>
+                  <td><span class="badge" style="font-size:10px;">${escapeHtml(h.left)} → ${escapeHtml(h.right)}</span></td>
+                  <td class="num">${h.minPos === h.maxPos ? h.minPos : `${h.minPos}–${h.maxPos}`}</td>
+                  <td class="num" style="color:var(--green);font-weight:700;">${h.minP.toExponential(2)}</td>
+                  <td class="mono" style="max-width:170px;word-break:break-all;">${escapeHtml(h.rep.r.sequence_id)}</td>
+                </tr>
+              `).join('')
+            : '<tr><td colspan="6" style="text-align:center;color:var(--ink-muted);padding:18px;">No hotspots match filter.</td></tr>';
+          pager.innerHTML = renderPager(hsList.length, state.wbPage, state.wbPageSize, 'setWbPage', 'setWbPageSize', [25, 50, 100]);
+          return;
+        }
+        document.getElementById('wbMatchCount').textContent = `${allBps.length} breakpoints`;
+        thead.innerHTML = '<tr><th>Sequence ID</th><th>Pos</th><th>Transition</th><th>95% CI</th><th>SNPs (L / R)</th><th>p_Fisher</th></tr>';
+        const totalPages = Math.max(1, Math.ceil(allBps.length / state.wbPageSize));
+        state.wbPage = Math.min(Math.max(1, state.wbPage), totalPages);
+        const slice = allBps.slice((state.wbPage - 1) * state.wbPageSize, state.wbPage * state.wbPageSize);
+        tbody.innerHTML = slice.length
+          ? slice.map(({ r, rIdx, b, bIdx }) => `
+              <tr class="clickable ${state.selectedSeqIdx === rIdx && state.highlightBpIdx === bIdx ? 'wb-selected' : ''}" onclick="selectWorkbenchSeq(${rIdx}, ${bIdx})">
+                <td class="mono" style="font-weight:600;max-width:170px;word-break:break-all;">${escapeHtml(r.sequence_id)}</td>
+                <td class="num">${b.bp_hxb2}</td>
+                <td><span class="badge" style="font-size:10px;">${escapeHtml(b.left_trunk)} → ${escapeHtml(b.right_trunk)}</span></td>
+                <td class="num">${b.ci_hxb2_low}–${b.ci_hxb2_high}</td>
+                <td class="num">${b.n11}/${b.n12} | ${b.n21}/${b.n22}</td>
+                <td class="num" style="color:var(--green);font-weight:700;">${b.p_fisher.toExponential(2)}</td>
+              </tr>
+            `).join('')
+          : '<tr><td colspan="6" style="text-align:center;color:var(--ink-muted);padding:18px;">No breakpoints verified.</td></tr>';
+        pager.innerHTML = renderPager(allBps.length, state.wbPage, state.wbPageSize, 'setWbPage', 'setWbPageSize', [25, 50, 100]);
+        return;
+      }
+
+      if (state.wbTab === 'segments' && meta.is_segmented) {
+        const isoList = (resp.assembly?.isolates || []).map((iso, idx) => ({ iso, idx }))
+          .filter(({ idx }) => seqFiltered.some(x => x.idx === idx));
+        document.getElementById('wbMatchCount').textContent = `${isoList.length} isolates`;
+        thead.innerHTML = '<tr><th>Isolate</th><th>Segs</th><th>PB2</th><th>PB1</th><th>PA</th><th>HA</th><th>NP</th><th>NA</th><th>MP</th><th>NS</th><th>Call</th></tr>';
+        const totalPages = Math.max(1, Math.ceil(isoList.length / state.wbPageSize));
+        state.wbPage = Math.min(Math.max(1, state.wbPage), totalPages);
+        const slice = isoList.slice((state.wbPage - 1) * state.wbPageSize, state.wbPage * state.wbPageSize);
+        tbody.innerHTML = slice.map(({ iso, idx }) => {
+          const slots = (iso.segments || []).map(s =>
+            `<td><span class="seg-slot-pill ${s.present ? 'ok' : 'miss'}" style="min-width:42px;font-size:9.5px;">${s.present ? s.mapped_nt : '—'}</span></td>`
+          ).join('');
+          const r = results[idx];
+          const cls = !r ? '' : (r.called_category === 'URF' ? 'orange' : 'green');
+          return `<tr class="clickable ${state.selectedSeqIdx === idx ? 'wb-selected' : ''}" onclick="selectWorkbenchSeq(${idx})"><td class="mono" style="font-weight:600;max-width:150px;word-break:break-all;">${escapeHtml(iso.isolate_id)}</td><td class="num">${iso.n_segments_present}/${iso.total_segments}</td>${slots}<td><span class="badge ${cls}" style="font-size:10px;">${escapeHtml(r?.called_lineage || '—')}</span></td></tr>`;
+        }).join('');
+        pager.innerHTML = renderPager(isoList.length, state.wbPage, state.wbPageSize, 'setWbPage', 'setWbPageSize', [25, 50, 100]);
+        return;
+      }
+
+      // Reference Atlas inside Workbench
+      document.querySelectorAll('[data-wbs3]').forEach(b => b.classList.toggle('active', b.dataset.wbs3 === state.s3AtlasFilter));
+      let list = meta.compendium && meta.compendium.length > 0
+        ? meta.compendium
+        : meta.trunk_names.map(t => ({ label: t, category: 'Basal_Reference', descriptive_name: `${t}(Basal)`, backbone: t, scope: 'full', status: 'Basal Reference', t_mrca: null, hxb2_barcode: `${t}:${meta.coding_start}-${meta.coding_end}` }));
+      const modeF = list.filter(c => {
+        const cat = c.category || '', st = c.status || '';
+        if (state.s3AtlasFilter === 'active') return cat !== 'Demoted_LANL_Entry';
+        if (state.s3AtlasFilter === 'novel') return cat.startsWith('Novel_Circulating');
+        if (state.s3AtlasFilter === 'demoted') return cat === 'Demoted_LANL_Entry' || st.startsWith('Demoted_') || st.startsWith('Contaminated_');
+        return true;
+      });
+      const qLow = (state.wbSearch || '').toLowerCase();
+      const filteredAtlas = modeF.filter(c => !qLow || `${c.label} ${c.category || ''} ${c.descriptive_name} ${c.status} ${c.hxb2_barcode}`.toLowerCase().includes(qLow));
+      document.getElementById('wbMatchCount').textContent = `${filteredAtlas.length} reference entries`;
+      thead.innerHTML = '<tr><th>Lineage</th><th>Formula</th><th>Backbone</th><th>Scope/tMRCA</th><th>Track</th></tr>';
+      const totalPages = Math.max(1, Math.ceil(filteredAtlas.length / state.wbPageSize));
+      state.wbPage = Math.min(Math.max(1, state.wbPage), totalPages);
+      const slice = filteredAtlas.slice((state.wbPage - 1) * state.wbPageSize, state.wbPage * state.wbPageSize);
+      tbody.innerHTML = slice.map(c => `
+        <tr>
+          <td><strong>${escapeHtml(c.label)}</strong><br><span style="font-size:9.5px;color:var(--ink-muted);">${escapeHtml(formatCategory(c.status))}</span></td>
+          <td class="mono" style="color:var(--orange);font-weight:600;">${escapeHtml(c.descriptive_name)}</td>
+          <td class="mono">${escapeHtml(c.backbone)}</td>
+          <td class="mono">${c.t_mrca != null ? c.t_mrca.toFixed(1) : escapeHtml(c.scope || 'full')}</td>
+          <td style="min-width:170px;">${renderBarcodeSVG(c.hxb2_barcode, meta, 200, false, true)}</td>
+        </tr>
+      `).join('');
+      pager.innerHTML = renderPager(filteredAtlas.length, state.wbPage, state.wbPageSize, 'setWbPage', 'setWbPageSize', [50, 100, 250]);
+    }
+
+    function renderDockedInspector() {
+      const resp = state.response;
+      if (!resp || !resp.results?.length) return;
+      const results = resp.results;
+      if (state.selectedSeqIdx < 0 || state.selectedSeqIdx >= results.length) {
+        state.selectedSeqIdx = 0;
+      }
+      const r = results[state.selectedSeqIdx];
+      document.getElementById('wbInspKicker').textContent = `${r.called_lineage} · ${formatCategory(r.called_category)}`;
+      document.getElementById('wbInspTitle').textContent = r.sequence_id;
+      document.getElementById('wbInspCounter').textContent = `${state.selectedSeqIdx + 1}/${results.length}`;
+      document.getElementById('wbInspectorBody').innerHTML = buildUnifiedInspectorHtml(state.selectedSeqIdx, state.highlightBpIdx);
+    }
 
     // =========================================================================
     // WALKTHROUGH TOUR ENGINE
@@ -3572,10 +5220,10 @@
     // MODALS: PASTE & LIVE NCBI / URL STREAMER
     // =========================================================================
     window.closeModals = function() {
-      document.getElementById('pasteModal').classList.add('hidden');
-      document.getElementById('streamModal').classList.add('hidden');
-      document.getElementById('preflightModal').classList.add('hidden');
-      document.getElementById('examplesModal').classList.add('hidden');
+      ['pasteModal', 'streamModal', 'preflightModal', 'examplesModal', 'customPackModal'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.classList.add('hidden');
+      });
     };
 
     window.runExample = async function(idx) {
@@ -3736,10 +5384,21 @@
       renderExamplesModal();
       syncPackPills();
       syncParamSummaryBadge();
+      setUiMode(state.uiMode);
 
       document.getElementById('brandHome').onclick = () => goView('landing');
       document.querySelectorAll('.stage-step[data-view]').forEach(btn => {
         btn.onclick = () => goView(btn.dataset.view);
+      });
+
+      document.getElementById('packChip').onclick = (e) => { e.stopPropagation(); togglePopover('packPopover', e.currentTarget); };
+      document.getElementById('topParamsBtn').onclick = (e) => { e.stopPropagation(); togglePopover('paramsPopover', e.currentTarget); };
+      document.getElementById('topExportBtn').onclick = (e) => { e.stopPropagation(); togglePopover('exportPopover', e.currentTarget); };
+
+      document.addEventListener('click', (ev) => {
+        if (!ev.target.closest('.popover-panel') && !ev.target.closest('#packChip') && !ev.target.closest('#topParamsBtn') && !ev.target.closest('#topExportBtn')) {
+          closePopovers();
+        }
       });
 
       document.querySelectorAll('#landingPackPills .seg-pill').forEach(btn => {
@@ -3777,15 +5436,67 @@
         if (el) el.addEventListener('change', syncParamSummaryBadge);
       });
 
+      ['popParamGamma', 'popParamMinSpan', 'popParamMinSnps', 'popParamPThresh', 'popParamMaskLoops'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener('change', () => {
+            syncParamInputsFromSource(true);
+            syncParamSummaryBadge();
+          });
+        }
+      });
+
       document.getElementById('s0SegSearch').oninput = (e) => { state.s0SegSearch = e.target.value; state.s0SegPage = 1; renderStage0Tables(); };
       document.getElementById('s0QaSearch').oninput = (e) => { state.s0QaSearch = e.target.value; state.s0QaPage = 1; renderStage0Tables(); };
       document.getElementById('s1Search').oninput = () => { state.s1Page = 1; state.s1GroupPage = 1; filterAndDrawStage1Cards(); };
       document.getElementById('s2Search').oninput = (e) => { state.s2Search = e.target.value; state.s2Page = 1; renderStage2Table(); };
+      document.getElementById('wbSearch').oninput = (e) => { state.wbSearch = e.target.value; state.wbPage = 1; renderWorkbenchMaster(); };
 
       document.addEventListener('keydown', (ev) => {
         if (ev.key === 'Escape') {
           closeDrawer();
           closeModals();
+          closePopovers();
+          return;
+        }
+        const tag = (ev.target && ev.target.tagName) ? ev.target.tagName.toLowerCase() : '';
+        if (tag === 'input' || tag === 'textarea' || tag === 'select' || ev.metaKey || ev.ctrlKey || ev.altKey) {
+          return;
+        }
+        if (ev.key === '/') {
+          ev.preventDefault();
+          const inp = state.activeView === 'workbench'
+            ? document.getElementById('wbSearch')
+            : (state.activeView === 'stage1' ? document.getElementById('s1Search') : null);
+          if (inp) { inp.focus(); inp.select(); }
+          return;
+        }
+        if (ev.key === 'p') {
+          ev.preventDefault();
+          togglePopover('paramsPopover', document.getElementById('topParamsBtn'));
+          return;
+        }
+        if (ev.key === 'm') {
+          ev.preventDefault();
+          setUiMode(state.uiMode === 'pro' ? 'guided' : 'pro');
+          return;
+        }
+        if (ev.key === '?') {
+          ev.preventDefault();
+          openGuideDrawer();
+          return;
+        }
+        if (ev.key === '1' && state.response) { setTrackMode('epi'); return; }
+        if (ev.key === '2' && state.response) { setTrackMode('basal'); return; }
+        if (ev.key === 'c' && state.response) { copySelectedFormula(); return; }
+        if ((ev.key === 'j' || ev.key === 'ArrowDown') && state.activeView === 'workbench') {
+          ev.preventDefault();
+          stepWorkbenchSelection(1);
+          return;
+        }
+        if ((ev.key === 'k' || ev.key === 'ArrowUp') && state.activeView === 'workbench') {
+          ev.preventDefault();
+          stepWorkbenchSelection(-1);
         }
       });
     }

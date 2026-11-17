@@ -30,6 +30,18 @@ self.onmessage = async (ev) => {
       return;
     }
 
+    if (type === 'load_custom_pack') {
+      const res = JSON.parse(wasm.load_custom_pack(payload.jsonStr || '', payload.fastaStr || ''));
+      self.postMessage({ reqId, ok: true, type: 'load_custom_pack', ...res });
+      return;
+    }
+
+    if (type === 'export_pack') {
+      const bundle = wasm.export_pack_bundle_json(payload.packId || 'hiv1');
+      self.postMessage({ reqId, ok: true, type: 'export_pack', bundle });
+      return;
+    }
+
     if (type === 'screen') {
       const t0 = performance.now();
       const raw = wasm.screen_with_pack(

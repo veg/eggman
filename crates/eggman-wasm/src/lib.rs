@@ -1,6 +1,6 @@
 use eggman_core::{
-    CompendiumEntry, EggmanEngine, GeneLandmark, ScreeningConfig, SegmentedAssemblyResult,
-    SequenceResult,
+    CompendiumEntry, EggmanEngine, GeneLandmark, PathogenProfilePack, ScreeningConfig,
+    SegmentedAssemblyResult, SequenceResult,
 };
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
@@ -61,11 +61,20 @@ pub struct WasmEggman {
     iav: EggmanEngine,
     sc2: EggmanEngine,
     sarbeco: EggmanEngine,
+    custom: Option<EggmanEngine>,
+    custom_pack: Option<PathogenProfilePack>,
 }
 
 impl WasmEggman {
     fn engine_for(&self, pack_id: &str) -> (&'static str, &EggmanEngine) {
         match pack_id.trim().to_ascii_lowercase().as_str() {
+            "custom" => {
+                if let Some(ref eng) = self.custom {
+                    ("custom", eng)
+                } else {
+                    ("hiv1", &self.hiv1)
+                }
+            }
             "iav" | "flu" | "h5n1" | "influenza" | "influenza_a_8seg" => ("iav", &self.iav),
             "sc2" | "sars2" | "sars-cov-2" | "sars_cov2" | "sars_cov2_wuhan" => ("sc2", &self.sc2),
             "sarbeco" | "sarbecovirus" | "sarbecovirus_wuhan" => ("sarbeco", &self.sarbeco),
@@ -334,6 +343,38 @@ impl WasmEggman {
             iav: EggmanEngine::from_builtin_id("iav").expect("valid embedded IAV pack"),
             sc2: EggmanEngine::from_builtin_id("sc2").expect("valid embedded SC2 pack"),
             sarbeco: EggmanEngine::from_builtin_id("sarbeco").expect("valid embedded Sarbeco pack"),
+            custom: None,
+            custom_pack: None,
+        }
+    }
+
+    /// Load a custom `PathogenProfilePack` JSON (or bare `PathogenSpec` + optional FASTA profiles string) into slot `"custom"`.
+    pub fn load_custom_pack(&mut self, json_str: &str, fasta_override: &str) -> String {
+        match PathogenProfilePack::from_json_and_fasta_str(json_str, fasta_override) {
+            Ok(pack) => match EggmanEngine::from_pathogen_pack(pack.clone()) {
+                Ok(eng) => {
+                    self.custom = Some(eng);
+                    self.custom_pack = Some(pack);
+                    let meta = self.build_pack_meta("custom");
+                    serde_json::json!({ "ok": true, "meta": meta }).to_string()
+                }
+                Err(e) => serde_json::json!({ "ok": false, "error": e }).to_string(),
+            },
+            Err(e) => serde_json::json!({ "ok": false, "error": e }).to_string(),
+        }
+    }
+
+    /// Export any built-in pack (`hiv1`, `iav`, `sc2`, `sarbeco`) or loaded `"custom"` pack as a self-contained JSON bundle.
+    pub fn export_pack_bundle_json(&self, pack_id: &str) -> String {
+        let low = pack_id.trim().to_ascii_lowercase();
+        if low == "custom" {
+            if let Some(ref pack) = self.custom_pack {
+                return serde_json::to_string_pretty(pack).unwrap_or_else(|_| "{}".to_string());
+            }
+        }
+        match PathogenProfilePack::from_builtin_id(&low) {
+            Ok(pack) => serde_json::to_string_pretty(&pack).unwrap_or_else(|_| "{}".to_string()),
+            Err(e) => serde_json::json!({ "error": e }).to_string(),
         }
     }
 
@@ -494,5 +535,20 @@ mod wasm_multipathogen_tests {
                 expected_pack, anon_det
             );
         }
+    }
+
+    #[test]
+    fn custom_pack_bundle_export_and_reload_works() {
+        let mut wasm = WasmEggman::new();
+        let bundle = wasm.export_pack_bundle_json("sc2");
+        let load_res: serde_json::Value = serde_json::from_str(&wasm.load_custom_pack(&bundle, "")).unwrap();
+        assert_eq!(load_res["ok"], true, "custom pack load failed: {:?}", load_res);
+        assert_eq!(load_res["meta"]["pack_id"], "custom");
+
+        let fasta = include_str!("../../../docs/examples/sars_cov2_recomb.fasta");
+        let out_json = wasm.screen_with_pack("custom", fasta, "auto", 3.5, 0, 3, 0.01, false);
+        let parsed: serde_json::Value = serde_json::from_str(&out_json).unwrap();
+        assert_eq!(parsed["active_pack"], "custom");
+        assert_eq!(parsed["results"].as_array().unwrap().len(), 7);
     }
 }
