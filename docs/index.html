@@ -1033,6 +1033,58 @@
       padding: 20px 22px;
       box-shadow: 0 20px 45px rgba(20, 20, 19, 0.22);
     }
+    .loading-bar-track {
+      width: 100%;
+      height: 8px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 999px;
+      overflow: hidden;
+      margin: 12px 0 14px;
+      position: relative;
+    }
+    .loading-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--orange) 0%, #f59e0b 50%, var(--orange) 100%);
+      background-size: 200% 100%;
+      border-radius: 999px;
+      transition: width 0.22s ease-out;
+      animation: loadingShimmer 1.6s linear infinite;
+    }
+    @keyframes loadingShimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: 0 0; }
+    }
+    .loading-steps {
+      display: grid;
+      gap: 6px;
+      background: var(--bg-subtle);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--ink-secondary);
+    }
+    .loading-step {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .loading-step.active {
+      color: var(--ink);
+      font-weight: 600;
+    }
+    .loading-step.done {
+      color: var(--green);
+    }
+    .loading-pulse-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--orange);
+      display: inline-block;
+      animation: ledPulse 0.9s infinite alternate;
+    }
     .modal-tabs {
       display: flex;
       gap: 6px;
@@ -2055,6 +2107,32 @@
         <button class="btn" id="btnPreflightCancel">Cancel</button>
         <button class="btn" id="btnPreflightSample">Analyze First 150 Records</button>
         <button class="btn primary" id="btnPreflightProceed">Analyze All Records</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STREAMING & WEBASSEMBLY SCREENING LOADING MODAL -->
+  <div class="modal-overlay hidden" id="loadingModal" role="status" aria-live="polite">
+    <div class="modal-card" style="max-width:540px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="loading-pulse-dot" id="loadingPulseDot"></span>
+          <span style="font-size:15.5px;font-weight:700;color:var(--ink);" id="loadingModalTitle">Screening Sequences in WebAssembly…</span>
+        </div>
+        <span class="badge mono" id="loadingModalTimer">0.0 s</span>
+      </div>
+      <p id="loadingModalSub" style="font-size:12.5px;color:var(--ink-secondary);margin:4px 0 0;"></p>
+      <div class="loading-bar-track">
+        <div class="loading-bar-fill" id="loadingBarFill" style="width:12%;"></div>
+      </div>
+      <div class="loading-steps" id="loadingStepsList">
+        <div class="loading-step" id="loadingStepFetch"><span>1.</span><span>Stream &amp; decompress FASTA records</span></div>
+        <div class="loading-step" id="loadingStepAlign"><span>2.</span><span>Project onto reference frame &amp; assemble segments</span></div>
+        <div class="loading-step" id="loadingStepCall"><span>3.</span><span>Run 4-gate guarded caller &amp; breakpoint deconvolution</span></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;">
+        <span class="mono" style="font-size:11px;color:var(--ink-muted);">100% client-side WebAssembly • no data uploaded</span>
+        <button type="button" class="btn sm" id="btnCancelLoading" onclick="cancelActiveScreening()">Cancel</button>
       </div>
     </div>
   </div>
@@ -3122,10 +3200,105 @@
       badge.classList.remove('hidden');
     }
 
+    let loadingTimerInterval = null;
+    let loadingDelayTimeout = null;
+    let loadingStartTs = 0;
+
+    function showLoadingModal({ phase = 'screen', title = '', sub = '', estSec = 4 } = {}) {
+      if (loadingDelayTimeout) {
+        clearTimeout(loadingDelayTimeout);
+        loadingDelayTimeout = null;
+      }
+      const modal = document.getElementById('loadingModal');
+      if (!modal) return;
+      if (!loadingTimerInterval) {
+        loadingStartTs = performance.now();
+      }
+      const screenPhaseStartTs = performance.now();
+      document.getElementById('loadingModalTitle').textContent = title || 'Screening Sequences in WebAssembly…';
+      document.getElementById('loadingModalSub').textContent = sub || '';
+
+      const sFetch = document.getElementById('loadingStepFetch');
+      const sAlign = document.getElementById('loadingStepAlign');
+      const sCall = document.getElementById('loadingStepCall');
+      const bar = document.getElementById('loadingBarFill');
+      const timerEl = document.getElementById('loadingModalTimer');
+
+      const updateVisuals = () => {
+        const totalElapsedSec = (performance.now() - loadingStartTs) / 1000;
+        if (timerEl) timerEl.textContent = `${totalElapsedSec.toFixed(1)} s`;
+        if (phase === 'fetch') {
+          sFetch.className = 'loading-step active';
+          sFetch.innerHTML = '<span>1.</span><span>Streaming &amp; decompressing FASTA records…</span>';
+          sAlign.className = 'loading-step';
+          sAlign.innerHTML = '<span>2.</span><span>Project onto reference frame &amp; assemble segments</span>';
+          sCall.className = 'loading-step';
+          sCall.innerHTML = '<span>3.</span><span>Run 4-gate guarded caller &amp; breakpoint deconvolution</span>';
+          const pct = Math.min(28, 10 + totalElapsedSec * 9);
+          if (bar) bar.style.width = `${pct.toFixed(1)}%`;
+        } else {
+          const screenSec = (performance.now() - screenPhaseStartTs) / 1000;
+          const ratio = Math.min(1, screenSec / Math.max(0.8, estSec));
+          sFetch.className = 'loading-step done';
+          sFetch.innerHTML = '<span>✓</span><span>FASTA records loaded in memory</span>';
+          if (ratio < 0.45) {
+            sAlign.className = 'loading-step active';
+            sAlign.innerHTML = '<span>2.</span><span>Projecting onto reference frame &amp; stitching segments…</span>';
+            sCall.className = 'loading-step';
+            sCall.innerHTML = '<span>3.</span><span>Run 4-gate guarded caller &amp; breakpoint deconvolution</span>';
+          } else {
+            sAlign.className = 'loading-step done';
+            sAlign.innerHTML = '<span>✓</span><span>Reference coordinate projection &amp; assembly complete</span>';
+            sCall.className = 'loading-step active';
+            sCall.innerHTML = '<span>3.</span><span>Running 4-gate guarded caller &amp; breakpoint deconvolution…</span>';
+          }
+          const pct = 24 + 70 * (1 - Math.exp(-2.2 * ratio));
+          if (bar) bar.style.width = `${Math.min(94, pct).toFixed(1)}%`;
+        }
+      };
+
+      modal.classList.remove('hidden');
+      updateVisuals();
+      if (loadingTimerInterval) clearInterval(loadingTimerInterval);
+      loadingTimerInterval = setInterval(updateVisuals, 100);
+    }
+
+    function hideLoadingModal() {
+      if (loadingDelayTimeout) {
+        clearTimeout(loadingDelayTimeout);
+        loadingDelayTimeout = null;
+      }
+      if (loadingTimerInterval) {
+        clearInterval(loadingTimerInterval);
+        loadingTimerInterval = null;
+      }
+      const modal = document.getElementById('loadingModal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    window.cancelActiveScreening = async function() {
+      state.cancelledByUser = true;
+      state.running = false;
+      hideLoadingModal();
+      document.getElementById('stepBtn0')?.classList.remove('running');
+      setLed('ready', 'Cancelled');
+      spawnWorker();
+      try {
+        await callWasm('init', {});
+        if (state.loadedCustomPackBundle) {
+          await callWasm('load_custom_pack', state.loadedCustomPackBundle);
+        }
+        setLed('ready', '4 Panels Ready');
+      } catch (e) {
+        console.warn('Worker re-init after cancel:', e);
+      }
+    };
+
     async function executeScreening(fastaText, targetView = null) {
       const cleaned = (fastaText || '').trim();
       if (!cleaned) return;
       state.rawFasta = cleaned;
+      state.cancelledByUser = false;
 
       if (state.running) {
         // Cancel in-flight worker cleanly
@@ -3139,6 +3312,29 @@
       state.running = true;
       setLed('busy', '⚡ Analyzing…');
       document.getElementById('stepBtn0').classList.add('running');
+
+      const approxRecords = (cleaned.match(/^>/gm) || []).length || 1;
+      const mb = (cleaned.length / 1e6).toFixed(1);
+      const estSec = Math.max(1.2, approxRecords / 165);
+      const packName = state.selectedPack === 'auto'
+        ? 'Auto-detect Panel'
+        : (state.selectedPack === 'custom'
+            ? (state.customPackMeta?.pathogen_name || 'Custom Pack')
+            : (PACK_LABELS[state.selectedPack] || state.selectedPack));
+      const modalOpts = {
+        phase: 'screen',
+        title: `Screening ${approxRecords.toLocaleString()} Sequence${approxRecords === 1 ? '' : 's'} in WebAssembly…`,
+        sub: `${approxRecords.toLocaleString()} FASTA record${approxRecords === 1 ? '' : 's'} (${mb} MB) • Panel: ${packName}${approxRecords >= 100 ? ` • Est. ~${Math.max(2, Math.round(estSec))} s` : ''}`,
+        estSec,
+      };
+      const modalAlreadyOpen = !document.getElementById('loadingModal')?.classList.contains('hidden');
+      if (modalAlreadyOpen || approxRecords >= 25 || cleaned.length >= 200_000) {
+        showLoadingModal(modalOpts);
+      } else {
+        loadingDelayTimeout = setTimeout(() => {
+          if (state.running) showLoadingModal(modalOpts);
+        }, 180);
+      }
 
       try {
         const p = readParamsFromUI();
@@ -3154,6 +3350,7 @@
           maskLoops: p.maskLoops,
         });
         state.running = false;
+        hideLoadingModal();
         state.response = res.response;
         state.elapsedMs = res.elapsedMs;
 
@@ -3200,6 +3397,10 @@
         goView(dest);
       } catch (err) {
         state.running = false;
+        hideLoadingModal();
+        if (state.cancelledByUser || (err && err.message === 'Cancelled by new analysis')) {
+          return;
+        }
         setLed('error', 'Error');
         alert('Analysis error: ' + (err && err.message ? err.message : err));
       }
@@ -3406,7 +3607,22 @@
       syncParamSummaryBadge();
     };
 
-    window.reapplyParams = function() {
+    window.reapplyParams = async function() {
+      if (!state.rawFasta && state.deferredFastaUrl) {
+        try {
+          showLoadingModal({
+            phase: 'fetch',
+            title: 'Streaming FASTA for Custom Thresholds…',
+            sub: `Fetching ${state.deferredFastaUrl.split('/').pop() || 'cohort FASTA'}…`,
+            estSec: 3,
+          });
+          state.rawFasta = await fetchFastaText({ url: state.deferredFastaUrl });
+        } catch (err) {
+          hideLoadingModal();
+          alert('Could not fetch FASTA for re-run: ' + (err && err.message ? err.message : err));
+          return;
+        }
+      }
       if (!state.rawFasta) return;
       if (state.response && state.response.results) {
         const resList = state.response.results;
@@ -5258,35 +5474,47 @@
       document.getElementById('streamAccInput').value = accList;
     };
 
+    // Fetch FASTA text from NCBI accessions (array of ids) or a CORS-enabled URL.
+    async function fetchFastaText({ accessions, url }) {
+      let fastaText = '';
+      if (accessions) {
+        if (!accessions.length) throw new Error('Enter at least one NCBI accession');
+        const efetch = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=${encodeURIComponent(accessions.join(','))}&rettype=fasta&retmode=text`;
+        const r = await fetch(efetch);
+        if (!r.ok) throw new Error(`NCBI efetch HTTP ${r.status}`);
+        fastaText = await r.text();
+      } else {
+        let u = (url || '').trim();
+        if (!u) throw new Error('Enter a CORS-enabled FASTA URL');
+        const ghMatch = u.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
+        if (ghMatch) {
+          u = `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}/${ghMatch[3]}`;
+        }
+        const r = await fetch(u);
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        // A .gz FASTA is inflated in the browser, so large cohorts download compressed.
+        if (/\.gz(\?|#|$)/i.test(u) && r.body && typeof DecompressionStream === 'function') {
+          fastaText = await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
+        } else {
+          fastaText = await r.text();
+        }
+      }
+      if (!fastaText.includes('>')) throw new Error('Response did not contain FASTA records');
+      return fastaText;
+    }
+
     window.executeStreamFetch = async function() {
       const msgEl = document.getElementById('streamStatusMsg');
       const btn = document.getElementById('btnFetchNow');
       btn.disabled = true;
       msgEl.textContent = 'Streaming FASTA over HTTPS…';
       try {
-        let fastaText = '';
-        if (currentStreamTab === 'accessions') {
-          const ids = document.getElementById('streamAccInput').value
-            .split(/[\s,;]+/)
-            .map(s => s.trim())
-            .filter(Boolean);
-          if (!ids.length) throw new Error('Enter at least one NCBI accession');
-          const url = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=${encodeURIComponent(ids.join(','))}&rettype=fasta&retmode=text`;
-          const r = await fetch(url);
-          if (!r.ok) throw new Error(`NCBI efetch HTTP ${r.status}`);
-          fastaText = await r.text();
-        } else {
-          let u = document.getElementById('streamUrlInput').value.trim();
-          if (!u) throw new Error('Enter a CORS-enabled FASTA URL');
-          const ghMatch = u.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
-          if (ghMatch) {
-            u = `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}/${ghMatch[3]}`;
-          }
-          const r = await fetch(u);
-          if (!r.ok) throw new Error(`HTTP ${r.status}`);
-          fastaText = await r.text();
-        }
-        if (!fastaText.includes('>')) throw new Error('Response did not contain FASTA records');
+        const fastaText = currentStreamTab === 'accessions'
+          ? await fetchFastaText({
+              accessions: document.getElementById('streamAccInput').value
+                .split(/[\s,;]+/).map(s => s.trim()).filter(Boolean),
+            })
+          : await fetchFastaText({ url: document.getElementById('streamUrlInput').value });
         msgEl.textContent = '';
         btn.disabled = false;
         closeModals();
@@ -5557,6 +5785,276 @@
       } catch (err) {
         setLed('error', 'WASM Boot Failed');
         console.error(err);
+        return;
+      }
+      applyDeepLink();
+    }
+
+    // Deep links: ?pack=<auto|hiv1|iav|sc2|sarbeco> or ?pack_url=<https/same-origin .pack.json(.gz)>
+    // with optional ?accessions=A,B,C (NCBI) or ?fasta_url=<https/same-origin FASTA(.gz)>.
+    // Opens, fetches and screens on load.
+    async function fetchTextMaybeGzip(url) {
+      let u = (url || '').trim();
+      const ghMatch = u.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
+      if (ghMatch) {
+        u = `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}/${ghMatch[3]}`;
+      }
+      const r = await fetch(u);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      if (/\.gz(\?|#|$)/i.test(u) && r.body && typeof DecompressionStream === 'function') {
+        return await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
+      }
+      return await r.text();
+    }
+
+    function resolveSafeLinkUrl(rawUrl) {
+      if (!rawUrl) return null;
+      try {
+        const resolved = new URL(rawUrl, window.location.href);
+        if (resolved.protocol === 'https:' || resolved.origin === window.location.origin) {
+          return resolved;
+        }
+      } catch (e) { /* invalid URL */ }
+      return null;
+    }
+
+    function applyPrecomputedReport(rawReport, elapsedOverrideMs = 0) {
+      let resp;
+      const fallbackPack = state.selectedPack === 'auto' ? 'iav' : state.selectedPack;
+      if (Array.isArray(rawReport)) {
+        const meta = fallbackPack === 'custom'
+          ? state.customPackMeta
+          : (state.packMetas[fallbackPack] || state.packMetas.iav || state.packMetas.hiv1);
+        const landmarks = (meta && meta.landmarks) || [];
+        const isolates = (meta && meta.is_segmented) ? rawReport.map(r => {
+          const segSlots = landmarks.map((lm, sIdx) => {
+            const matched = (r.segments || []).filter(s => s.short_gene === lm.short_name || (s.hxb2_start <= lm.end && s.hxb2_end >= lm.start));
+            const mappedNt = matched.reduce((acc, s) => acc + Math.max(0, Math.min(s.hxb2_end, lm.end) - Math.max(s.hxb2_start, lm.start) + 1), 0);
+            return {
+              seg_name: lm.short_name,
+              seg_index: sIdx,
+              ref_start: lm.start,
+              ref_end: lm.end,
+              present: mappedNt > 0,
+              source_header: mappedNt > 0 ? r.sequence_id : null,
+              raw_len_nt: mappedNt,
+              mapped_nt: mappedNt,
+            };
+          });
+          const nPresent = segSlots.filter(s => s.present).length;
+          return {
+            isolate_id: r.sequence_id,
+            n_segments_present: nPresent,
+            total_segments: landmarks.length,
+            total_mapped_nt: r.mapped_coding_nt || 0,
+            segments: segSlots,
+          };
+        }) : [];
+        resp = {
+          active_pack: fallbackPack,
+          detection: {
+            detected_pack: fallbackPack,
+            confidence: 'precomputed',
+            reason: `Loaded precomputed workflow report (${rawReport.length.toLocaleString()} sequences)`,
+            hit_scores: {
+              hiv1_rate: fallbackPack === 'hiv1' ? 0.5 : 0,
+              iav_rate: fallbackPack === 'iav' ? 0.5 : 0,
+              sc2_rate: fallbackPack === 'sc2' ? 0.5 : 0,
+              sarbeco_rate: fallbackPack === 'sarbeco' ? 0.5 : 0,
+            },
+          },
+          pack_meta: meta,
+          assembly: {
+            mode_used: 'precomputed',
+            was_multi_record_assembled: false,
+            raw_record_count: rawReport.length,
+            isolate_count: rawReport.length,
+            isolates,
+          },
+          assembled_fasta: '',
+          results: rawReport,
+        };
+      } else if (rawReport && Array.isArray(rawReport.results)) {
+        const activePack = rawReport.active_pack || fallbackPack;
+        const meta = rawReport.pack_meta || (activePack === 'custom' ? state.customPackMeta : state.packMetas[activePack]);
+        resp = {
+          ...rawReport,
+          active_pack: activePack,
+          pack_meta: meta,
+          detection: rawReport.detection || {
+            detected_pack: activePack,
+            confidence: 'precomputed',
+            reason: `Loaded precomputed workflow report (${rawReport.results.length.toLocaleString()} sequences)`,
+            hit_scores: {},
+          },
+          assembly: rawReport.assembly || {
+            mode_used: 'precomputed',
+            was_multi_record_assembled: false,
+            raw_record_count: rawReport.results.length,
+            isolate_count: rawReport.results.length,
+            isolates: [],
+          },
+        };
+      } else {
+        throw new Error('Report JSON must be a SequenceResult[] array or MultiPackScreenResponse object');
+      }
+
+      state.running = false;
+      hideLoadingModal();
+      state.response = resp;
+      state.elapsedMs = elapsedOverrideMs;
+
+      const meta = resp.pack_meta;
+      const results = resp.results || [];
+      const asm = resp.assembly || {};
+      const nBps = results.reduce((a, r) => a + (r.n_breakpoints || 0), 0);
+
+      for (let i = 0; i <= 3; i++) {
+        const b = document.getElementById(`stepBtn${i}`);
+        b.disabled = false;
+        b.classList.remove('running');
+        b.classList.add('done');
+      }
+      const topEx = document.getElementById('topExportBtn');
+      if (topEx) topEx.classList.remove('hidden');
+
+      document.getElementById('stepBadge0').textContent = asm.was_multi_record_assembled
+        ? `${asm.raw_record_count}→${results.length}`
+        : `${results.length} seq`;
+      document.getElementById('stepBadge1').textContent = 'Precomputed';
+      const activeRefCount = (meta.compendium && meta.compendium.length > 0)
+        ? meta.compendium.filter(c => c.category !== 'Demoted_LANL_Entry').length
+        : meta.trunk_names.length;
+      document.getElementById('stepBadge2').textContent = `${nBps} BPs`;
+      document.getElementById('stepBadge3').textContent = `${activeRefCount} refs`;
+      syncPackPills();
+      computeRunDeltaBadge(state.previousRunSnapshot, resp);
+
+      const shortPack = { hiv1: 'HIV-1', iav: 'IAV 8-Seg', sc2: 'SC2', sarbeco: 'Sarbeco', custom: 'Custom' }[resp.active_pack] || resp.active_pack;
+      setLed('ready', `Ready • ${shortPack}`);
+
+      renderStage0();
+      renderStage1();
+      renderStage2();
+      renderStage3();
+
+      const hasUnaligned = results.some(r => r.n_segments === 0 || r.called_category === 'Unclassifiable');
+      const defaultDest = state.uiMode === 'pro'
+        ? 'workbench'
+        : ((asm.was_multi_record_assembled || hasUnaligned) ? 'stage0' : 'stage1');
+      goView(defaultDest);
+    }
+
+    async function applyDeepLink() {
+      const q = new URLSearchParams(window.location.search);
+      const pack = q.get('pack');
+      if (pack && document.querySelector(`.seg-pill[data-pack="${pack}"]`)) {
+        setSelectedPack(pack);
+      }
+      const packUrlRaw = (q.get('pack_url') || '').trim();
+      const reportUrlRaw = (q.get('report_url') || '').trim();
+      const accs = (q.get('accessions') || '').split(/[\s,;]+/).map(s => s.trim()).filter(Boolean);
+      const fastaUrl = (q.get('fasta_url') || '').trim();
+      if (!packUrlRaw && !reportUrlRaw && !accs.length && !fastaUrl) return;
+
+      let resolvedPack = null;
+      if (packUrlRaw) {
+        resolvedPack = resolveSafeLinkUrl(packUrlRaw);
+        if (!resolvedPack) {
+          setLed('error', 'pack_url must be https or same-origin');
+          return;
+        }
+      }
+
+      let resolvedReport = null;
+      if (reportUrlRaw) {
+        resolvedReport = resolveSafeLinkUrl(reportUrlRaw);
+        if (!resolvedReport) {
+          setLed('error', 'report_url must be https or same-origin');
+          return;
+        }
+      }
+
+      let resolved = null;
+      if (!accs.length && fastaUrl) {
+        resolved = resolveSafeLinkUrl(fastaUrl);
+        if (!resolved) {
+          setLed('error', 'fasta_url must be https or same-origin');
+          return;
+        }
+      }
+
+      if (resolvedPack) {
+        setLed('busy', 'Loading pack from link…');
+        showLoadingModal({
+          phase: 'fetch',
+          title: 'Loading Reference Profile Pack…',
+          sub: `Pack: ${resolvedPack.pathname.split('/').filter(Boolean).pop() || resolvedPack.host}`,
+          estSec: 2,
+        });
+        try {
+          const jsonStr = await fetchTextMaybeGzip(resolvedPack.href);
+          const res = await callWasm('load_custom_pack', { jsonStr, fastaStr: '' });
+          if (!res.ok) throw new Error(res.error || 'Pack load failed');
+          state.customPackMeta = res.meta;
+          state.loadedCustomPackBundle = { jsonStr, fastaStr: '' };
+          state.customSpan16Loaded = false;
+          state.selectedPack = 'custom';
+          syncPackPills();
+          setLed('ready', `Ready • ${res.meta?.pathogen_name || 'Custom'}`);
+          if (!resolvedReport && !accs.length && !resolved) {
+            hideLoadingModal();
+            showToast(`Loaded reference pack: ${res.meta?.pathogen_name || 'custom'}`);
+            return;
+          }
+        } catch (err) {
+          hideLoadingModal();
+          setLed('error', `Pack fetch failed: ${err && err.message ? err.message : err}`);
+          return;
+        }
+      }
+
+      if (resolvedReport) {
+        state.deferredFastaUrl = resolved ? resolved.href : null;
+        const repLabel = resolvedReport.pathname.split('/').filter(Boolean).pop() || resolvedReport.host;
+        setLed('busy', 'Loading precomputed report…');
+        showLoadingModal({
+          phase: 'fetch',
+          title: 'Loading Precomputed Workflow Report…',
+          sub: `Source: ${repLabel}`,
+          estSec: 1,
+        });
+        try {
+          const t0 = performance.now();
+          const jsonStr = await fetchTextMaybeGzip(resolvedReport.href);
+          const parsed = JSON.parse(jsonStr);
+          applyPrecomputedReport(parsed, performance.now() - t0);
+          return;
+        } catch (err) {
+          hideLoadingModal();
+          setLed('error', `Report fetch failed: ${err && err.message ? err.message : err}`);
+          return;
+        }
+      }
+
+      if (!accs.length && !resolved) return;
+      setLed('', 'Fetching FASTA from link…');
+      const srcLabel = accs.length
+        ? `${accs.length.toLocaleString()} NCBI accession${accs.length === 1 ? '' : 's'} via E-utilities`
+        : (resolved.pathname.split('/').filter(Boolean).pop() || resolved.host);
+      showLoadingModal({
+        phase: 'fetch',
+        title: 'Streaming FASTA Dataset…',
+        sub: `Source: ${srcLabel}`,
+        estSec: 4,
+      });
+      try {
+        const fastaText = await fetchFastaText(accs.length ? { accessions: accs } : { url: resolved.href });
+        // The link asked for this dataset, so skip the large-input confirmation.
+        executeScreening(fastaText, null);
+      } catch (err) {
+        hideLoadingModal();
+        setLed('error', `Link fetch failed: ${err && err.message ? err.message : err}`);
       }
     }
 

@@ -1,7 +1,8 @@
 use clap::Parser;
 use rayon::prelude::*;
 use eggman_core::{
-    EggmanEngine, PathogenSpec, ScreeningConfig, SequenceResult, TemporalGuardConfig,
+    EggmanEngine, PathogenProfilePack, PathogenSpec, ScreeningConfig, SequenceResult,
+    TemporalGuardConfig,
 };
 use std::fs;
 use std::io::{self, Write};
@@ -24,9 +25,13 @@ struct Args {
     #[arg(index = 1)]
     input_pos: Option<PathBuf>,
 
-    /// Custom pathogen profile pack (JSON manifest file or directory containing manifest.json)
+    /// Custom pathogen profile pack (built-in id `iav`/`sc2`/`sarbeco`/`hiv1`, JSON bundle file, or directory containing manifest.json)
     #[arg(long)]
     pack: Option<PathBuf>,
+
+    /// Export a self-contained PathogenProfilePack JSON bundle (from --pack <id_or_dir>, or default hiv1) to PATH and exit
+    #[arg(long)]
+    export_pack: Option<PathBuf>,
 
     /// Export the embedded HIV-1 Group M PathogenSpec template JSON to PATH and exit
     #[arg(long)]
@@ -80,6 +85,10 @@ struct Args {
     #[arg(long)]
     temporal_slack_yr: Option<f64>,
 
+    /// Segmented virus FASTA grouping mode (`auto`, `single_isolate`, `per_record`)
+    #[arg(long, default_value = "auto")]
+    seg_mode: String,
+
     /// Quiet mode (suppress per-sequence console report)
     #[arg(short, long, default_value_t = false)]
     quiet: bool,
@@ -104,6 +113,24 @@ fn csv_quote(s: &str, guard: bool) -> String {
 
 fn main() {
     let args = Args::parse();
+
+    if let Some(export_path) = &args.export_pack {
+        let pack = if let Some(pack_arg) = &args.pack {
+            PathogenProfilePack::from_path(pack_arg)
+                .unwrap_or_else(|e| die(2, &format!("failed to load pathogen pack {:?}: {}", pack_arg, e)))
+        } else {
+            PathogenProfilePack::hiv1_group_m_default()
+        };
+        let json_str = serde_json::to_string_pretty(&pack)
+            .unwrap_or_else(|e| die(2, &format!("failed to serialize PathogenProfilePack: {}", e)));
+        fs::write(export_path, json_str + "\n")
+            .unwrap_or_else(|e| die(2, &format!("failed to write pack bundle {:?}: {}", export_path, e)));
+        eprintln!(
+            "Exported PathogenProfilePack bundle ('{}', version '{}') to {:?}",
+            pack.spec.pathogen_name, pack.spec.pack_version, export_path
+        );
+        return;
+    }
 
     if let Some(export_path) = &args.export_default_pack {
         let json_str = serde_json::to_string_pretty(&PathogenSpec::hiv1_group_m_default())
@@ -163,10 +190,6 @@ fn main() {
     if records.is_empty() {
         die(1, "no FASTA records found");
     }
-    let total_records = records.len();
-    if args.limit > 0 && records.len() > args.limit {
-        records.truncate(args.limit);
-    }
 
     let engine = if let Some(pack_path) = &args.pack {
         EggmanEngine::from_pack_path(pack_path)
@@ -191,10 +214,34 @@ fn main() {
     }
     let cfg = engine_cfg;
 
-    let results: Vec<SequenceResult> = records
-        .par_iter()
-        .map(|(hdr, seq)| engine.classify_sequence_with_temporal(hdr, seq, &cfg, &temporal_cfg))
-        .collect();
+    let (results, total_records): (Vec<SequenceResult>, usize) = if engine.spec().is_segmented
+        && !args.seg_mode.eq_ignore_ascii_case("per_record")
+        && records
+            .iter()
+            .any(|(_, s)| s.chars().filter(|&c| c != '|').count() < 8_000)
+    {
+        let (_, mut seg_results, _) = engine.classify_fasta_with_segmentation_temporal(
+            &raw_text,
+            &args.seg_mode,
+            &cfg,
+            &temporal_cfg,
+        );
+        let n_isolates = seg_results.len();
+        if args.limit > 0 && seg_results.len() > args.limit {
+            seg_results.truncate(args.limit);
+        }
+        (seg_results, n_isolates)
+    } else {
+        let n_recs = records.len();
+        if args.limit > 0 && records.len() > args.limit {
+            records.truncate(args.limit);
+        }
+        let res = records
+            .par_iter()
+            .map(|(hdr, seq)| engine.classify_sequence_with_temporal(hdr, seq, &cfg, &temporal_cfg))
+            .collect();
+        (res, n_recs)
+    };
 
     let elapsed = t0.elapsed().as_secs_f64();
 

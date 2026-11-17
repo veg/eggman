@@ -708,6 +708,11 @@ impl PathogenProfilePack {
         } else if path.is_file() {
             (path.to_path_buf(), path.parent())
         } else {
+            if let Some(s) = path.to_str() {
+                if let Ok(builtin) = Self::from_builtin_id(s) {
+                    return Ok(builtin);
+                }
+            }
             return Err(format!("pathogen pack path does not exist: {:?}", path));
         };
 
@@ -952,6 +957,10 @@ pub struct SequenceResult {
     pub query_year: Option<f64>,
     #[serde(default)]
     pub masked_future_trunks: Vec<String>,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub pack_version: String,
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub snapshot_date: String,
 }
 
 /// Slot coverage metadata for a single RNA segment or genomic partition of a segmented isolate.
@@ -3009,6 +3018,8 @@ impl EggmanEngine {
                 matches: vec![],
                 query_year,
                 masked_future_trunks,
+                pack_version: self.spec.pack_version.clone(),
+                snapshot_date: self.spec.snapshot_date.clone(),
             };
         }
 
@@ -3143,6 +3154,8 @@ impl EggmanEngine {
             matches,
             query_year,
             masked_future_trunks,
+            pack_version: self.spec.pack_version.clone(),
+            snapshot_date: self.spec.snapshot_date.clone(),
         }
     }
 
