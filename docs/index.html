@@ -168,7 +168,7 @@
       border-radius: 7px;
       white-space: nowrap;
       flex-shrink: 0;
-      max-width: 220px;
+      max-width: 320px;
       overflow: hidden;
       text-overflow: ellipsis;
     }
@@ -204,7 +204,7 @@
       white-space: nowrap;
       flex-shrink: 0;
     }
-    .stage-step:hover:not(:disabled) {
+    .stage-step:hover:not(:disabled):not(.active) {
       border-color: var(--ink-muted);
       color: var(--ink);
       background: #FFFFFF;
@@ -297,12 +297,12 @@
       width: 100%;
       max-width: 1380px;
       margin: 0 auto;
-      padding: 20px 22px 86px;
+      padding: 20px 22px 36px;
       flex: 1;
     }
 
     @media (max-width: 720px) {
-      main.container { padding: 14px 12px 92px; }
+      main.container { padding: 14px 12px 36px; }
     }
 
     .coach-banner {
@@ -1256,6 +1256,7 @@
                 <th>MP</th>
                 <th>NS</th>
                 <th>Aligned nt</th>
+                <th>Initial Call</th>
               </tr>
             </thead>
             <tbody id="segMatrixBody"></tbody>
@@ -1315,16 +1316,16 @@
       </details>
 
       <!-- SEQUENCE ALIGNMENT & COVERAGE TABLE -->
-      <div class="card">
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+      <details class="card params-details" id="s0QaDetails" open>
+        <summary>
           <div>
-            <div style="font-size:14px;font-weight:700;">Sequence Alignment &amp; Coverage</div>
-            <div style="font-size:12px;color:var(--ink-secondary);">Click a row to view sequence alignment details.</div>
+            <span class="summary-title" style="font-size:14px;font-weight:700;">Sequence Alignment &amp; Coverage</span>
+            <div style="font-size:12px;color:var(--ink-secondary);margin-top:2px;">Click a row to view sequence alignment details.</div>
           </div>
-          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-            <input type="text" class="input-field search" id="s0QaSearch" placeholder="Filter sequence, lineage, method…" />
-            <span class="badge" id="s0QaCount">0 sequences</span>
-          </div>
+          <span class="badge" id="s0QaCount">0 sequences</span>
+        </summary>
+        <div style="display:flex;justify-content:flex-end;margin-bottom:8px;">
+          <input type="text" class="input-field search" id="s0QaSearch" placeholder="Filter sequence, lineage, method…" />
         </div>
         <div class="table-scroll">
           <table>
@@ -1342,7 +1343,7 @@
           </table>
         </div>
         <div id="s0QaPager"></div>
-      </div>
+      </details>
     </section>
 
     <!-- ================================================================= -->
@@ -1553,18 +1554,6 @@
       </div>
     </section>
   </main>
-
-  <!-- STICKY CONTEXT-AWARE BOTTOM BAR -->
-  <footer class="bottom-bar hidden" id="bottomBar">
-    <div class="bottom-left">
-      <button class="btn sm" onclick="exportCSV()">Export CSV</button>
-      <button class="btn sm" onclick="exportJSON()">Export JSON</button>
-      <button class="btn sm hidden" id="btnBottomFasta" onclick="downloadStitchedFasta()">↓ Stitched 8-Seg FASTA</button>
-    </div>
-    <div class="bottom-right">
-      <button class="btn primary" id="btnBottomNext">Next Step →</button>
-    </div>
-  </footer>
 
   <!-- SLIDE-OVER INSPECTOR DRAWER -->
   <div class="drawer-backdrop" id="drawerBackdrop" onclick="closeDrawer()"></div>
@@ -2054,10 +2043,37 @@
       return false;
     }
 
+    function formatCategory(cat) {
+      const map = {
+        Pure_Subtype: 'Pure Subtype',
+        CRF: 'Catalogued CRF',
+        Certified_CRF: 'Catalogued CRF',
+        Certified_Reassortant: 'Catalogued Reassortant',
+        Novel_Circulating_CRF: 'Novel Circulating CRF',
+        Novel_Circulating: 'Novel Circulating',
+        Validated_Basal_Trunk: 'Parental Reference',
+        URF: 'Uncatalogued (URF)',
+        Unclassifiable: 'Unclassifiable',
+      };
+      return map[cat] || String(cat || '').replace(/_/g, ' ');
+    }
+
+    function classifyResultBucket(r) {
+      const cat = r.called_category || (r.is_clonal ? 'Pure_Subtype' : 'URF');
+      if (r.n_segments === 0 || cat === 'Unclassifiable') return 'unclass';
+      if (cat === 'URF') return 'urf';
+      if (cat === 'Pure_Subtype' || (r.is_clonal && !['CRF', 'Certified_CRF', 'Certified_Reassortant', 'Novel_Circulating_CRF'].includes(cat))) {
+        return 'clonal';
+      }
+      return 'certified';
+    }
+
     function setLed(mode, statusText) {
       const dot = document.getElementById('statusDot');
+      const statusEl = document.getElementById('brandStatus');
       dot.className = 'status-dot ' + (mode || '');
-      document.getElementById('brandStatus').textContent = statusText;
+      statusEl.textContent = statusText;
+      statusEl.classList.toggle('hidden', mode === 'ready');
     }
 
     // Rule 5: Deterministic State Flushing
@@ -2143,29 +2159,6 @@
         btn.classList.toggle('active', btn.dataset.view === view);
       });
 
-      const bottomBar = document.getElementById('bottomBar');
-      const nextBtn = document.getElementById('btnBottomNext');
-      const bottomFasta = document.getElementById('btnBottomFasta');
-      if (view === 'landing') {
-        bottomBar.classList.add('hidden');
-      } else {
-        bottomBar.classList.remove('hidden');
-        bottomFasta.classList.toggle('hidden', !(state.response?.pack_meta?.is_segmented));
-        if (view === 'stage0') {
-          nextBtn.textContent = 'View Lineages (Step 2) →';
-          nextBtn.onclick = () => goView('stage1');
-        } else if (view === 'stage1') {
-          nextBtn.textContent = 'View Breakpoints (Step 3) →';
-          nextBtn.onclick = () => goView('stage2');
-        } else if (view === 'stage2') {
-          nextBtn.textContent = 'Export & Reference Panel (Step 4) →';
-          nextBtn.onclick = () => goView('stage3');
-        } else {
-          nextBtn.textContent = '← Return to Start';
-          nextBtn.onclick = () => goView('landing');
-        }
-      }
-
       renderWalkthroughCoach();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -2217,9 +2210,7 @@
       let lmTrack = '';
       let maxRow = 0;
       if (showLandmarks && Array.isArray(meta.landmarks) && meta.landmarks.length > 0) {
-        // Keep only non-overlapping or primary landmarks nicely tiled into <=2 rows
-        const visibleLms = meta.landmarks.filter(lm => !lm.parent_gene && lm.end >= codingStart && lm.start <= codingEnd);
-        const lms = visibleLms.length > 0 ? visibleLms : meta.landmarks.filter(lm => lm.end >= codingStart && lm.start <= codingEnd);
+        const lms = meta.landmarks.filter(lm => lm.end >= codingStart && lm.start <= codingEnd);
         let prevEnd = [-Infinity, -Infinity];
         lms.forEach(lm => {
           let row = lm.start > prevEnd[0] ? 0 : (lm.start > prevEnd[1] ? 1 : (prevEnd[0] <= prevEnd[1] ? 0 : 1));
@@ -2238,7 +2229,8 @@
       }
 
       const svgH = showLandmarks ? (barY + barH + 22 + maxRow * 14) : (barY + barH + 4);
-      return `<svg viewBox="0 0 ${width} ${svgH}" width="100%" style="max-width:${width}px;display:block;background:#FAF9F6;border-radius:6px;border:1px solid #DFDCD4;">${rects}${segDividers}${lmTrack}</svg>`;
+      const maxWStyle = miniHeight ? `max-width:${width}px;` : '';
+      return `<svg viewBox="0 0 ${width} ${svgH}" width="100%" style="${maxWStyle}display:block;background:#FAF9F6;border-radius:6px;border:1px solid #DFDCD4;">${rects}${segDividers}${lmTrack}</svg>`;
     }
 
     // =========================================================================
@@ -2442,7 +2434,9 @@
         `;
       }).join('');
 
-      // Segmented Influenza Matrix (searchable + paginated)
+      // Segmented Influenza Matrix (searchable + paginated) & auto-collapse generic QA table when IAV matrix is shown
+      const qaDet = document.getElementById('s0QaDetails');
+      if (qaDet) qaDet.open = !meta.is_segmented;
       renderStage0Tables();
     }
 
@@ -2478,12 +2472,16 @@
             const tip = s.source_header ? `Source: ${s.source_header}` : 'Missing segment';
             return `<td><span class="seg-slot-pill ${s.present ? 'ok' : 'miss'}" title="${escapeHtml(tip)}">${s.present ? `${s.mapped_nt}nt` : '—'}</span></td>`;
           }).join('');
+          const res = results[idx];
+          const initCall = res ? res.called_lineage : '—';
+          const callCls = !res ? '' : ((res.n_segments === 0 || res.called_category === 'Unclassifiable') ? 'danger' : (res.called_category === 'URF' ? 'orange' : 'green'));
           return `
             <tr class="clickable" onclick="openStage0Drawer(${idx})">
               <td class="mono" style="font-weight:600;max-width:210px;word-break:break-all;">${escapeHtml(iso.isolate_id)}</td>
               <td class="num"><span class="badge ${iso.n_segments_present === iso.total_segments ? 'green' : 'amber'}">${iso.n_segments_present}/${iso.total_segments}</span></td>
               ${slotCells}
               <td class="num">${iso.total_mapped_nt.toLocaleString()}</td>
+              <td><span class="badge ${callCls}">${escapeHtml(initCall)}</span></td>
             </tr>
           `;
         }).join('');
@@ -2572,10 +2570,14 @@
       const meta = resp.pack_meta;
       const results = resp.results || [];
 
-      const nUnclass = results.filter(r => r.n_segments === 0 || r.called_category === 'Unclassifiable').length;
-      const nUrf = results.filter(r => r.called_category === 'URF').length;
-      const nCertified = results.filter(r => r.n_segments > 0 && (r.called_category === 'CRF' || r.called_category === 'Certified_CRF' || r.called_category === 'Certified_Reassortant' || r.called_category === 'Novel_Circulating_CRF' || (!r.is_clonal && r.called_category !== 'URF' && r.called_category !== 'Unclassifiable'))).length;
-      const nClonal = results.length - nUnclass - nUrf - nCertified;
+      let nUnclass = 0, nUrf = 0, nCertified = 0, nClonal = 0;
+      results.forEach(r => {
+        const b = classifyResultBucket(r);
+        if (b === 'unclass') nUnclass += 1;
+        else if (b === 'urf') nUrf += 1;
+        else if (b === 'clonal') nClonal += 1;
+        else nCertified += 1;
+      });
 
       document.getElementById('s1PackBadge').textContent = `${PACK_LABELS[resp.active_pack] || meta.pathogen_name} • ${meta.reference_name}`;
       document.getElementById('s1Headline').textContent = `${nClonal} Clonal • ${nCertified} Catalogued Recombinants/Reassortants • ${nUrf} Uncatalogued (URF)`;
@@ -2640,14 +2642,10 @@
       const q = (document.getElementById('s1Search').value || '').toLowerCase();
 
       const catFiltered = results.map((r, idx) => ({ r, idx })).filter(({ r }) => {
-        const cat = r.called_category || (r.is_clonal ? 'Pure_Subtype' : 'URF');
-        const isUrf = cat === 'URF';
-        const isUnclass = r.n_segments === 0 || cat === 'Unclassifiable';
-        const isCert = !isUnclass && !isUrf && !r.is_clonal;
-        const isClonal = !isUnclass && !isUrf && r.is_clonal;
-        if (state.s1Filter === 'clonal' && !isClonal) return false;
-        if (state.s1Filter === 'certified' && !isCert) return false;
-        if (state.s1Filter === 'urf' && !isUrf) return false;
+        const b = classifyResultBucket(r);
+        if (state.s1Filter === 'clonal' && b !== 'clonal') return false;
+        if (state.s1Filter === 'certified' && b !== 'certified') return false;
+        if (state.s1Filter === 'urf' && b !== 'urf') return false;
         if (q) {
           const hay = `${r.sequence_id} ${r.called_lineage} ${r.epidemiological_formula} ${r.basal_formula} ${r.structural_formula}`.toLowerCase();
           if (!hay.includes(q)) return false;
@@ -2663,7 +2661,7 @@
         b.classList.toggle('active', b.dataset.s1view === effectiveView);
       });
 
-      // Compute architecture rollup groups
+      // Compute architecture rollup groups (always shown across small and large cohorts)
       const groups = computeStage1Groups(catFiltered, meta);
       const rollupCard = document.getElementById('s1CohortRollupCard');
       const compactCard = document.getElementById('s1CompactTableCard');
@@ -2671,11 +2669,9 @@
       const cardsPager = document.getElementById('s1CardsPager');
       const filterBanner = document.getElementById('s1GroupFilterBanner');
 
-      // Show Rollup card when explicitly in 'groups' view OR whenever cohort > 15 sequences
-      const showRollup = effectiveView === 'groups' || results.length > 15;
-      rollupCard.classList.toggle('hidden', !showRollup);
+      rollupCard.classList.remove('hidden');
 
-      if (showRollup) {
+      if (true) {
         document.getElementById('s1GroupCount').textContent = `${groups.length} architecture${groups.length === 1 ? '' : 's'}`;
         const totalGrpPages = Math.max(1, Math.ceil(groups.length / state.s1GroupPageSize));
         state.s1GroupPage = Math.min(Math.max(1, state.s1GroupPage), totalGrpPages);
@@ -2697,7 +2693,7 @@
                 <tr class="clickable" style="${isSelected ? 'background:var(--orange-soft);' : ''}" onclick="selectS1Group(decodeURIComponent('${encKey}'))">
                   <td class="num" style="font-weight:700;">${g.count.toLocaleString()}</td>
                   <td class="num">${pct}%</td>
-                  <td><span class="badge ${badgeCls}">${escapeHtml(g.lin)} [${escapeHtml(g.cat.replace(/_/g, ' '))}]</span>${recurrentTag}</td>
+                  <td><span class="badge ${badgeCls}">${escapeHtml(g.lin)} [${escapeHtml(formatCategory(g.cat))}]</span>${recurrentTag}</td>
                   <td class="mono" style="font-size:11.5px;color:var(--orange);font-weight:600;max-width:240px;word-break:break-word;">${escapeHtml(g.epiFormula)}</td>
                   <td class="num">${meanMap.toLocaleString()} nt</td>
                   <td class="num">${meanBps}</td>
@@ -2793,7 +2789,7 @@
           ? 'Unclassifiable'
           : (cat === 'URF'
             ? `URF (${r.n_breakpoints} Breakpoint${r.n_breakpoints === 1 ? '' : 's'})`
-            : `${lin} [${cat.replace(/_/g, ' ')}]`);
+            : `${lin} [${formatCategory(cat)}]`);
 
         const epiBc = r.epidemiological_barcode || r.hxb2_barcode;
         const hasDual = epiBc && r.hxb2_barcode && epiBc !== r.hxb2_barcode && state.trackMode === 'epi';
@@ -2806,7 +2802,7 @@
         return `
           <div class="isolate-card" onclick="openStage1Drawer(${idx})">
             <div class="isolate-head">
-              <div class="isolate-id">&gt; ${escapeHtml(r.sequence_id)}</div>
+              <div class="isolate-id">${escapeHtml(r.sequence_id)}</div>
               <div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
                 <span class="badge blue">${escapeHtml(r.locus_scope)} (${r.hxb2_span_start}..${r.hxb2_span_end})</span>
                 <span class="badge ${pillClass}">${escapeHtml(pillLabel)}</span>
@@ -2828,8 +2824,8 @@
             </div>
             <div class="svg-wrap">
               ${hasDual ? '<div class="metric-caption" style="margin-bottom:3px;">Circulating Lineage Track</div>' : ''}
-              ${renderBarcodeSVG(primaryBc, meta, 920, !hasDual)}
-              ${hasDual ? `<div class="metric-caption" style="margin:6px 0 3px;">Parental Subtype Track</div>${renderBarcodeSVG(r.hxb2_barcode, meta, 920, true)}` : ''}
+              ${renderBarcodeSVG(primaryBc, meta, 1180, !hasDual)}
+              ${hasDual ? `<div class="metric-caption" style="margin:6px 0 3px;">Parental Subtype Track</div>${renderBarcodeSVG(r.hxb2_barcode, meta, 1180, true)}` : ''}
             </div>
           </div>
         `;
@@ -2912,11 +2908,14 @@
         <div class="kpi-box"><div class="metric-caption">Top Donor Transition</div><div class="metric-num small">${escapeHtml(topPair)}</div><div class="metric-sub">${topPairN ? `${topPairN} breakpoint(s)` : 'Clonal cohort'}</div></div>
       `;
 
-      // Scalable Horizon SVG: 60-bin Density Histogram + Top-20 Grouped Architecture Tracks (<= 20 rows)
-      const W = 940;
+      // Scalable Horizon SVG: Dedicated Left Label Gutter + 60-bin Density Histogram + Scale Ticks
+      const W = 960;
+      const plotX = 210;
+      const plotW = W - plotX - 12;
       const cStart = meta.coding_start || 1;
       const cEnd = meta.coding_end || meta.ref_full_len || 9417;
       const cSpan = Math.max(1, cEnd - cStart + 1);
+      const xOf = (pos) => plotX + ((Math.max(cStart, Math.min(cEnd, pos)) - cStart) / cSpan) * plotW;
       const isoRows = results.filter(r => (r.breakpoints || []).length > 0);
       const useArchHorizon = isoRows.length > 20;
 
@@ -2953,16 +2952,21 @@
       const histH = 54;
       const rowH = 22;
       const topPad = 24 + histH + 14;
-      const H = Math.max(140, topPad + Math.max(1, trackEntries.length) * rowH + 22);
+      const H = Math.max(150, topPad + Math.max(1, trackEntries.length) * rowH + 26);
 
       let svgContent = '';
-      const lms = meta.landmarks.filter(lm => !lm.parent_gene && lm.end >= cStart && lm.start <= cEnd);
+      svgContent += `<rect x="0" y="6" width="${plotX}" height="${H - 24}" fill="#FAF9F6"/>`;
+      svgContent += `<line x1="${plotX}" y1="6" x2="${plotX}" y2="${H - 18}" stroke="#DFDCD4" stroke-width="1"/>`;
+      svgContent += `<text x="8" y="18" fill="#787670" font-size="8.5" font-family="Inter, sans-serif" font-weight="700">SEQUENCE / ARCHITECTURE</text>`;
+
+      const lms = meta.landmarks.filter(lm => lm.end >= cStart && lm.start <= cEnd);
       lms.forEach((lm, idx) => {
-        const x = ((Math.max(lm.start, cStart) - cStart) / cSpan) * W;
-        const w = Math.max(2, ((Math.min(lm.end, cEnd) - Math.max(lm.start, cStart) + 1) / cSpan) * W);
-        svgContent += `<rect x="${x.toFixed(1)}" y="6" width="${w.toFixed(1)}" height="${H - 18}" fill="${idx % 2 === 0 ? '#FAF9F6' : '#F2EFE8'}" stroke="#E2DFD7" stroke-width="0.6"/>`;
-        if (w > 22) {
-          svgContent += `<text x="${(x + w / 2).toFixed(1)}" y="18" fill="#4A4945" font-size="9" font-family="Inter, sans-serif" font-weight="700" text-anchor="middle">${escapeHtml(lm.short_name)}</text>`;
+        const x1 = xOf(lm.start);
+        const x2 = xOf(lm.end);
+        const w = Math.max(2, x2 - x1);
+        svgContent += `<rect x="${x1.toFixed(1)}" y="6" width="${w.toFixed(1)}" height="${H - 24}" fill="${idx % 2 === 0 ? '#FAF9F6' : '#F2EFE8'}" stroke="#E2DFD7" stroke-width="0.6"/>`;
+        if (w > 20) {
+          svgContent += `<text x="${(x1 + w / 2).toFixed(1)}" y="18" fill="#4A4945" font-size="8.5" font-family="Inter, sans-serif" font-weight="700" text-anchor="middle">${escapeHtml(lm.short_name)}</text>`;
         }
       });
 
@@ -2974,45 +2978,55 @@
         binCounts[Math.floor(rel * nBins)] += 1;
       });
       const maxBin = Math.max(1, ...binCounts);
-      const binW = W / nBins;
+      const binW = plotW / nBins;
       const histBaseY = 24 + histH;
-      svgContent += `<line x1="0" y1="${histBaseY}" x2="${W}" y2="${histBaseY}" stroke="#9C9A94" stroke-width="0.8"/>`;
-      svgContent += `<text x="6" y="34" fill="#787670" font-size="8.5" font-family="Inter, sans-serif" font-weight="600">Breakpoint Density (${allBps.length} breakpoints, peak bin ${maxBin})</text>`;
+      svgContent += `<line x1="${plotX}" y1="${histBaseY}" x2="${plotX + plotW}" y2="${histBaseY}" stroke="#9C9A94" stroke-width="0.8"/>`;
+      svgContent += `<text x="8" y="48" fill="#4A4945" font-size="8.8" font-family="Inter, sans-serif" font-weight="700">Breakpoint Density (${allBps.length} bp${allBps.length === 1 ? '' : 's'})</text>`;
+      svgContent += `<text x="8" y="61" fill="#787670" font-size="8" font-family="JetBrains Mono, monospace">peak bin: ${maxBin}</text>`;
       binCounts.forEach((cnt, bi) => {
         if (cnt > 0) {
           const bh = (cnt / maxBin) * (histH - 14);
-          svgContent += `<rect x="${(bi * binW + 0.8).toFixed(1)}" y="${(histBaseY - bh).toFixed(1)}" width="${Math.max(1.5, binW - 1.6).toFixed(1)}" height="${bh.toFixed(1)}" fill="#E04F16" opacity="0.82" rx="1"><title>Bin ${bi + 1}: ${cnt} breakpoint(s)</title></rect>`;
+          svgContent += `<rect x="${(plotX + bi * binW + 0.8).toFixed(1)}" y="${(histBaseY - bh).toFixed(1)}" width="${Math.max(1.5, binW - 1.6).toFixed(1)}" height="${bh.toFixed(1)}" fill="#E04F16" opacity="0.82" rx="1"><title>Bin ${bi + 1}: ${cnt} breakpoint(s)</title></rect>`;
         }
       });
 
       if (trackEntries.length === 0) {
-        svgContent += `<text x="${W / 2}" y="${topPad + 20}" fill="#787670" font-size="12.5" font-family="Inter, sans-serif" text-anchor="middle">All isolates in this cohort are clonal with zero verified basal breakpoints.</text>`;
+        svgContent += `<text x="${plotX + plotW / 2}" y="${topPad + 20}" fill="#787670" font-size="12.5" font-family="Inter, sans-serif" text-anchor="middle">All sequences in this cohort are clonal with zero recombination breakpoints.</text>`;
       } else {
         trackEntries.forEach((entry, rowIdx) => {
           const y = topPad + rowIdx * rowH + 10;
           const r = entry.rep;
           const rIdx = entry.repIdx;
           const lbl = useArchHorizon ? `[n=${entry.count}] ${entry.label}` : entry.label;
-          svgContent += `<line x1="0" y1="${y}" x2="${W}" y2="${y}" stroke="#DFDCD4" stroke-width="1"/>`;
-          svgContent += `<text x="6" y="${y - 4}" fill="#4A4945" font-size="8.8" font-family="JetBrains Mono, monospace">${escapeHtml(lbl.slice(0, 42))}</text>`;
+          svgContent += `<line x1="${plotX}" y1="${y}" x2="${plotX + plotW}" y2="${y}" stroke="#DFDCD4" stroke-width="1"/>`;
+          svgContent += `<text x="8" y="${y + 3}" fill="#4A4945" font-size="8.8" font-family="JetBrains Mono, monospace"><title>${escapeHtml(lbl)}</title>${escapeHtml(lbl.slice(0, 30))}</text>`;
           r.breakpoints.forEach((b, bIdx) => {
-            const bx = ((b.bp_hxb2 - cStart) / cSpan) * W;
-            const xLo = ((b.ci_hxb2_low - cStart) / cSpan) * W;
-            const xHi = ((b.ci_hxb2_high - cStart) / cSpan) * W;
+            const bx = xOf(b.bp_hxb2);
+            const xLo = xOf(b.ci_hxb2_low);
+            const xHi = xOf(b.ci_hxb2_high);
             const col = getLineageColor(b.right_trunk);
             svgContent += `<line x1="${xLo.toFixed(1)}" y1="${y}" x2="${xHi.toFixed(1)}" y2="${y}" stroke="${col}" stroke-width="4" opacity="0.5"/>`;
             svgContent += `<circle cx="${bx.toFixed(1)}" cy="${y}" r="5" fill="${col}" stroke="#141413" stroke-width="1" style="cursor:pointer;" onclick="openBreakpointDrawer(${rIdx}, ${bIdx})"><title>${escapeHtml(r.sequence_id)}: ${escapeHtml(meta.reference_name)} ${b.bp_hxb2} (${escapeHtml(b.left_trunk)} → ${escapeHtml(b.right_trunk)}, p=${b.p_fisher.toExponential(2)})</title></circle>`;
           });
         });
       }
+
+      // Nucleotide scale ticks along bottom axis
+      const tickStep = cSpan > 15000 ? 2000 : 1000;
+      const firstTick = Math.ceil(cStart / tickStep) * tickStep;
+      for (let pos = firstTick; pos <= cEnd; pos += tickStep) {
+        const tx = xOf(pos);
+        svgContent += `<line x1="${tx.toFixed(1)}" y1="${H - 18}" x2="${tx.toFixed(1)}" y2="${H - 14}" stroke="#9C9A94" stroke-width="0.9"/>`;
+        svgContent += `<text x="${tx.toFixed(1)}" y="${H - 5}" fill="#787670" font-size="8" font-family="JetBrains Mono, monospace" text-anchor="middle">${Math.round(pos / 1000)} kb</text>`;
+      }
+
       document.getElementById('s2HorizonSvg').innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="100%" style="background:#FFFFFF;border:1px solid #DFDCD4;border-radius:8px;display:block;">${svgContent}</svg>`;
 
       renderStage2Table();
     }
 
     function landmarkForPos(pos, meta) {
-      const lm = (meta.landmarks || []).find(l => !l.parent_gene && pos >= l.start && pos <= l.end)
-        || (meta.landmarks || []).find(l => pos >= l.start && pos <= l.end);
+      const lm = (meta.landmarks || []).find(l => pos >= l.start && pos <= l.end);
       return lm ? lm.short_name : 'Region';
     }
 
@@ -3145,7 +3159,7 @@
         <tr>
           <td><strong>${g.count.toLocaleString()}</strong> (${((g.count / Math.max(1, results.length)) * 100).toFixed(1)}%)</td>
           <td>${escapeHtml(g.lin)}</td>
-          <td>${escapeHtml(g.cat)}</td>
+          <td>${escapeHtml(formatCategory(g.cat))}</td>
           <td><code>${escapeHtml(g.epiFormula)}</code></td>
           <td>${(g.sumBps / g.count).toFixed(1)}</td>
         </tr>
@@ -3156,7 +3170,7 @@
         <tr>
           <td>${escapeHtml(r.sequence_id)}</td>
           <td>${escapeHtml(r.called_lineage)}</td>
-          <td>${escapeHtml(r.called_category)}</td>
+          <td>${escapeHtml(formatCategory(r.called_category))}</td>
           <td>${escapeHtml(r.epidemiological_formula || r.descriptive_name)}</td>
           <td>${escapeHtml(r.basal_formula || r.descriptive_name)}</td>
           <td>${r.n_breakpoints}</td>
@@ -3231,7 +3245,7 @@
           : escapeHtml(c.scope || 'full');
         return `
           <tr>
-            <td><strong>${escapeHtml(c.label)}</strong><br><span style="font-size:10.5px;color:var(--ink-muted);">${escapeHtml(c.status)}</span></td>
+            <td><strong>${escapeHtml(c.label)}</strong><br><span style="font-size:10.5px;color:var(--ink-muted);">${escapeHtml(formatCategory(c.status))}</span></td>
             <td class="mono" style="color:var(--orange);font-weight:700;">${escapeHtml(c.descriptive_name)}</td>
             <td class="mono">${escapeHtml(c.backbone)}</td>
             <td class="mono">${tm}</td>
@@ -3323,7 +3337,7 @@
       openDrawer('LINEAGE & COORDINATE DETAILS', r.sequence_id, `
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;">
           <span class="badge blue">${escapeHtml(meta.pathogen_name)}</span>
-          <span class="badge ${r.called_category === 'URF' ? 'orange' : 'green'}">${escapeHtml(r.called_lineage)} [${escapeHtml(r.called_category)}]</span>
+          <span class="badge ${r.called_category === 'URF' ? 'orange' : 'green'}">${escapeHtml(r.called_lineage)} [${escapeHtml(formatCategory(r.called_category))}]</span>
           <span class="badge">${escapeHtml(r.locus_scope)}</span>
         </div>
         <div class="formula-strip">
@@ -3379,6 +3393,10 @@
         <div style="margin-bottom:12px;">
           <span class="badge orange">${escapeHtml(b.left_trunk)} → ${escapeHtml(b.right_trunk)}</span>
           <span class="badge blue">95% CI: ${b.ci_hxb2_low}–${b.ci_hxb2_high} (${b.ci_width_nt} nt)</span>
+        </div>
+        <div style="margin-bottom:12px;">
+          <div class="metric-caption" style="margin-bottom:4px;">Reference Coordinate Map</div>
+          ${renderBarcodeSVG(r.hxb2_barcode, meta, 520, true)}
         </div>
         <div style="font-size:12px;font-weight:700;text-transform:uppercase;color:var(--ink-secondary);margin-bottom:6px;">Informative SNP Contingency Table</div>
         <div class="table-scroll">
