@@ -86,7 +86,7 @@ fn crf01_02_and_subtype_g_examples_resolve_accurately() {
     for (hdr, seq) in EggmanEngine::parse_fasta(&example("subtype_g")) {
         let res = engine.classify_sequence(&hdr, &seq, &cfg);
         assert_eq!(res.called_lineage, "G", "failed on {}", hdr);
-        assert_eq!(res.called_category, "Pure_Subtype", "failed on {}", hdr);
+        assert_eq!(res.called_category, "Ancestral_Recombinant_Subtype", "failed on {}", hdr);
     }
 }
 

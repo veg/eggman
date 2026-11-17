@@ -1531,9 +1531,17 @@
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:10px;">
           <div>
             <div style="font-size:14px;font-weight:700;" id="s3CompendiumTitle">Reference Panel</div>
-            <div style="font-size:12px;color:var(--ink-secondary);">Reference lineages and coordinate formulas in the active WebAssembly panel.</div>
+            <div style="font-size:12px;color:var(--ink-secondary);">Active reference lineages and coordinate formulas in the WebAssembly panel. Clonal-collapsed LANL CRFs are excluded by default.</div>
           </div>
-          <input type="text" class="input-field search" id="atlasSearch" placeholder="Filter lineage, formula, backbone…" onkeyup="renderAtlasTable()" />
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="segmented-pills" id="s3AtlasFilterPills" style="margin-bottom:0;">
+              <button class="seg-pill active" data-s3filter="active" onclick="setS3AtlasFilter('active')">Active Panel</button>
+              <button class="seg-pill" data-s3filter="novel" onclick="setS3AtlasFilter('novel')">Novel Circulating</button>
+              <button class="seg-pill" data-s3filter="demoted" onclick="setS3AtlasFilter('demoted')">Demoted LANL</button>
+              <button class="seg-pill" data-s3filter="all" onclick="setS3AtlasFilter('all')">All</button>
+            </div>
+            <input type="text" class="input-field search" id="atlasSearch" placeholder="Filter lineage, formula, backbone…" onkeyup="renderAtlasTable()" />
+          </div>
         </div>
         <div class="table-scroll">
           <table>
@@ -1873,9 +1881,9 @@
             ]
           },
           stage3: {
-            text: 'Filter the 200 HIV-1 Group M reference lineages (162 LANL clades + 38 circulating clusters) in the panel table below.',
+            text: 'Browse the 190 active HIV-1 Group M reference lineages (152 LANL/subtype references + 38 circulating clusters), or switch to Demoted LANL to audit the 10 collapsed/unverified entries.',
             chips: [
-              { label: '🔍 Filter All 38 Novel_Circulating Lineages', fn: () => { document.getElementById('atlasSearch').value = 'Novel_Circulating'; window.renderAtlasTable(); } },
+              { label: '🔍 Filter All 38 Novel_Circulating Lineages', fn: () => { window.setS3AtlasFilter('all'); document.getElementById('atlasSearch').value = 'Novel_Circulating'; window.renderAtlasTable(); } },
             ]
           }
         }
@@ -1910,6 +1918,7 @@
       s2Page: 1,
       s2PageSize: 50,
       s2Search: '',
+      s3AtlasFilter: 'active',
       s3AtlasPage: 1,
       s3AtlasPageSize: 100,
       rawFasta: '',
@@ -2046,6 +2055,8 @@
     function formatCategory(cat) {
       const map = {
         Pure_Subtype: 'Pure Subtype',
+        Ancestral_Recombinant_Subtype: 'Legacy Subtype (Ancestral Recombinant)',
+        Demoted_LANL_Entry: 'Demoted LANL Entry',
         CRF: 'Catalogued CRF',
         Certified_CRF: 'Catalogued CRF',
         Certified_Reassortant: 'Catalogued Reassortant',
@@ -2062,7 +2073,11 @@
       const cat = r.called_category || (r.is_clonal ? 'Pure_Subtype' : 'URF');
       if (r.n_segments === 0 || cat === 'Unclassifiable') return 'unclass';
       if (cat === 'URF') return 'urf';
-      if (cat === 'Pure_Subtype' || (r.is_clonal && !['CRF', 'Certified_CRF', 'Certified_Reassortant', 'Novel_Circulating_CRF'].includes(cat))) {
+      if (
+        cat === 'Pure_Subtype'
+        || cat === 'Ancestral_Recombinant_Subtype'
+        || (r.is_clonal && !['CRF', 'Certified_CRF', 'Certified_Reassortant', 'Novel_Circulating_CRF'].includes(cat))
+      ) {
         return 'clonal';
       }
       return 'certified';
@@ -2091,8 +2106,9 @@
         state.s2ViewMode = 'auto';
         state.s2Page = 1;
         state.s2Search = '';
+        state.s3AtlasFilter = 'active';
         state.s3AtlasPage = 1;
-        ['s0SegSearch', 's0QaSearch', 's1Search', 's2Search'].forEach(id => {
+        ['s0SegSearch', 's0QaSearch', 's1Search', 's2Search', 'atlasSearch'].forEach(id => {
           const el = document.getElementById(id);
           if (el) el.value = '';
         });
@@ -2332,8 +2348,11 @@
           ? `${asm.raw_record_count}→${results.length}`
           : `${results.length} seq`;
         document.getElementById('stepBadge1').textContent = `${state.elapsedMs.toFixed(0)}ms`;
+        const activeRefCount = (meta.compendium && meta.compendium.length > 0)
+          ? meta.compendium.filter(c => c.category !== 'Demoted_LANL_Entry').length
+          : meta.trunk_names.length;
         document.getElementById('stepBadge2').textContent = `${nBps} BPs`;
-        document.getElementById('stepBadge3').textContent = `${meta.compendium.length || meta.trunk_names.length} refs`;
+        document.getElementById('stepBadge3').textContent = `${activeRefCount} refs`;
         syncPackPills();
 
         const shortPack = { hiv1: 'HIV-1', iav: 'IAV 8-Seg', sc2: 'SC2', sarbeco: 'Sarbeco' }[resp.active_pack] || resp.active_pack;
@@ -3208,21 +3227,37 @@
       const resp = state.response;
       if (!resp) return;
       const meta = resp.pack_meta;
-      const compCount = meta.compendium?.length || meta.trunk_names?.length || 0;
-      document.getElementById('s3CompendiumTitle').textContent = `${PACK_LABELS[resp.active_pack] || meta.pathogen_name} Reference Panel (${compCount} Lineages)`;
+      const compCount = (meta.compendium && meta.compendium.length > 0)
+        ? meta.compendium.filter(c => c.category !== 'Demoted_LANL_Entry').length
+        : (meta.trunk_names?.length || 0);
+      document.getElementById('s3CompendiumTitle').textContent = `${PACK_LABELS[resp.active_pack] || meta.pathogen_name} Reference Panel (${compCount} Active Lineages)`;
       document.getElementById('s3DossierPreview').innerHTML = buildDossierSummaryHtml();
+      state.s3AtlasFilter = 'active';
+      state.s3AtlasPage = 1;
+      const searchEl = document.getElementById('atlasSearch');
+      if (searchEl) searchEl.value = '';
       window.renderAtlasTable();
     }
+
+    window.setS3AtlasFilter = function(f) {
+      state.s3AtlasFilter = f;
+      state.s3AtlasPage = 1;
+      window.renderAtlasTable();
+    };
 
     window.renderAtlasTable = function() {
       const resp = state.response;
       if (!resp) return;
       const meta = resp.pack_meta;
       const q = (document.getElementById('atlasSearch').value || '').toLowerCase();
+      document.querySelectorAll('[data-s3filter]').forEach(b => {
+        b.classList.toggle('active', b.dataset.s3filter === state.s3AtlasFilter);
+      });
       let list = meta.compendium && meta.compendium.length > 0
         ? meta.compendium
         : meta.trunk_names.map(t => ({
             label: t,
+            category: 'Basal_Reference',
             descriptive_name: `${t}(Basal)`,
             backbone: t,
             scope: 'full',
@@ -3231,7 +3266,18 @@
             hxb2_barcode: `${t}:${meta.coding_start}-${meta.coding_end}`,
           }));
 
-      const filtered = list.filter(c =>
+      const modeFiltered = list.filter(c => {
+        const cat = c.category || '';
+        const st = c.status || '';
+        if (state.s3AtlasFilter === 'active') return cat !== 'Demoted_LANL_Entry';
+        if (state.s3AtlasFilter === 'novel') return cat.startsWith('Novel_Circulating');
+        if (state.s3AtlasFilter === 'demoted') {
+          return cat === 'Demoted_LANL_Entry' || st.startsWith('Demoted_') || st.startsWith('Contaminated_');
+        }
+        return true;
+      });
+
+      const filtered = modeFiltered.filter(c =>
         `${c.label} ${c.category || ''} ${c.descriptive_name} ${c.status} ${c.hxb2_barcode}`.toLowerCase().includes(q)
       );
 
@@ -3239,21 +3285,23 @@
       state.s3AtlasPage = Math.min(Math.max(1, state.s3AtlasPage), totalPages);
       const slice = filtered.slice((state.s3AtlasPage - 1) * state.s3AtlasPageSize, state.s3AtlasPage * state.s3AtlasPageSize);
 
-      document.getElementById('atlasTableBody').innerHTML = slice.map(c => {
-        const tm = c.t_mrca != null
-          ? `${c.t_mrca.toFixed(1)}`
-          : escapeHtml(c.scope || 'full');
-        return `
-          <tr>
-            <td><strong>${escapeHtml(c.label)}</strong><br><span style="font-size:10.5px;color:var(--ink-muted);">${escapeHtml(formatCategory(c.status))}</span></td>
-            <td class="mono" style="color:var(--orange);font-weight:700;">${escapeHtml(c.descriptive_name)}</td>
-            <td class="mono">${escapeHtml(c.backbone)}</td>
-            <td class="mono">${tm}</td>
-            <td style="min-width:260px;">${renderBarcodeSVG(c.hxb2_barcode, meta, 320, false, true)}</td>
-            <td class="mono" style="font-size:10.5px;max-width:240px;word-break:break-all;">${escapeHtml(c.hxb2_barcode)}</td>
-          </tr>
-        `;
-      }).join('');
+      document.getElementById('atlasTableBody').innerHTML = slice.length
+        ? slice.map(c => {
+            const tm = c.t_mrca != null
+              ? `${c.t_mrca.toFixed(1)}`
+              : escapeHtml(c.scope || 'full');
+            return `
+              <tr>
+                <td><strong>${escapeHtml(c.label)}</strong><br><span style="font-size:10.5px;color:var(--ink-muted);">${escapeHtml(formatCategory(c.status))}</span></td>
+                <td class="mono" style="color:var(--orange);font-weight:700;">${escapeHtml(c.descriptive_name)}</td>
+                <td class="mono">${escapeHtml(c.backbone)}</td>
+                <td class="mono">${tm}</td>
+                <td style="min-width:260px;">${renderBarcodeSVG(c.hxb2_barcode, meta, 320, false, true)}</td>
+                <td class="mono" style="font-size:10.5px;max-width:240px;word-break:break-all;">${escapeHtml(c.hxb2_barcode)}</td>
+              </tr>
+            `;
+          }).join('')
+        : '<tr><td colspan="6" style="text-align:center;color:var(--ink-muted);padding:18px;">No reference lineages match the active filter.</td></tr>';
       document.getElementById('atlasPager').innerHTML = renderPager(filtered.length, state.s3AtlasPage, state.s3AtlasPageSize, 'setS3AtlasPage', 'setS3AtlasPageSize', [50, 100, 250]);
     };
 

@@ -285,7 +285,7 @@ impl PathogenSpec {
             )],
             pack_version: "2026.11-lanl2023".to_string(),
             snapshot_date: "2026-11-16".to_string(),
-            curation_sources: "LANL HIV Sequence Compendium 2023 (55 pure-subtype refs, 145 CRFs) + NCBI GenBank clinical census (278,829 sequences; 38 novel circulating clusters)".to_string(),
+            curation_sources: "LANL HIV Sequence Compendium 2023 (55 pure-subtype refs; 139 verified CRFs, 6 clonal-collapsed CRFs demoted) + NCBI GenBank clinical census (278,829 sequences; 38 novel circulating clusters)".to_string(),
             certification_criteria: "4-gate guarded caller: >=95% span coverage, binomial parent dominance (n_c - n_u >= 5), stem synapomorphies (net_stem >= 8, p <= 1e-4), and Kadane residual scan (< 80 nt / max S < 12)".to_string(),
         }
     }
@@ -3610,7 +3610,10 @@ impl EggmanEngine {
             }
 
             // Guard 1: Donor-Tract Completeness & Window Distinguishability
-            if cand.category != "Pure_Subtype" && cand.segments.len() >= 2 {
+            if cand.category != "Pure_Subtype"
+                && cand.category != "Ancestral_Recombinant_Subtype"
+                && cand.segments.len() >= 2
+            {
                 let mut covered_segs = 0usize;
                 let mut donor_ok = true;
                 let mut all_cand_trunks: HashSet<&str> = HashSet::new();
@@ -4161,6 +4164,11 @@ impl EggmanEngine {
 
         // 1. Exact structural formula matches
         for entry in &self.compendium {
+            if entry.category == "Demoted_LANL_Entry"
+                || entry.status.starts_with("Collapsed_to_Clonal_Trunk")
+            {
+                continue;
+            }
             let clonal_alias_match = self.spec.basal_trunks.iter().any(|t| {
                 format!("{}(Clonal)", t.name) == base_formula
                     && t.clonal_certified_label.as_deref() == Some(entry.label.as_str())
@@ -4190,6 +4198,11 @@ impl EggmanEngine {
             let mut scored_candidates: Vec<(f64, usize, usize, usize, &CompendiumEntry)> = Vec::new();
 
             for entry in &self.compendium {
+                if entry.category == "Demoted_LANL_Entry"
+                    || entry.status.starts_with("Collapsed_to_Clonal_Trunk")
+                {
+                    continue;
+                }
                 if matches.iter().any(|m| m.label == entry.label) {
                     continue;
                 }
@@ -4622,7 +4635,7 @@ mod pathogen_pack_tests {
         assert_eq!(engine.pathogen_name(), "HIV-1 Group M");
         assert_eq!(engine.reference_name(), "HXB2");
         assert_eq!(engine.basal_trunk_count(), 14);
-        assert_eq!(engine.certified_lineage_count(), 165);
+        assert_eq!(engine.certified_lineage_count(), 155);
 
         // JSON round-trip of default PathogenSpec produces an equivalent engine
         let spec_json = serde_json::to_string_pretty(&PathogenSpec::hiv1_group_m_default()).unwrap();
@@ -4632,7 +4645,7 @@ mod pathogen_pack_tests {
         let rt_engine = EggmanEngine::from_pathogen_pack(rt_pack).unwrap();
         assert_eq!(rt_engine.pathogen_name(), "HIV-1 Group M");
         assert_eq!(rt_engine.basal_trunk_count(), 14);
-        assert_eq!(rt_engine.certified_lineage_count(), 165);
+        assert_eq!(rt_engine.certified_lineage_count(), 155);
 
         let cfg = ScreeningConfig::default();
 
@@ -4642,6 +4655,7 @@ mod pathogen_pack_tests {
         assert_eq!(res_b.called_category, "Pure_Subtype");
         assert_eq!(res_b.structural_formula, "B(Clonal)");
         assert!(res_b.is_clonal);
+        assert!(res_b.matches.iter().any(|m| m.label == "Subtype_B"));
 
         let seq_c = tsv_profile_col(PROFILES_TSV, "C", 1);
         let res_c = rt_engine.classify_sequence("Q_C", &seq_c, &cfg);
@@ -4649,17 +4663,22 @@ mod pathogen_pack_tests {
         assert_eq!(res_c.called_category, "Pure_Subtype");
         assert_eq!(res_c.structural_formula, "C(Clonal)");
         assert!(res_c.is_clonal);
+        assert!(res_c.matches.iter().any(|m| m.label == "Subtype_C"));
+        assert!(!res_c
+            .matches
+            .iter()
+            .any(|m| matches!(m.label.as_str(), "CRF31_BC" | "CRF92_C2U" | "CRF146_BC")));
 
         let seq_g0 = tsv_profile_col(PROFILES_TSV, "G0", 1);
         let res_g0 = rt_engine.classify_sequence("Q_G0", &seq_g0, &cfg);
         assert_eq!(res_g0.called_lineage, "G");
-        assert_eq!(res_g0.called_category, "Pure_Subtype");
+        assert_eq!(res_g0.called_category, "Ancestral_Recombinant_Subtype");
         assert_eq!(res_g0.structural_formula, "G0(Clonal)");
 
         let seq_g = tsv_profile_col(CERTIFIED_PROFILES_TSV, "Subtype_G", 5);
         let res_g = rt_engine.classify_sequence("Q_G", &seq_g, &cfg);
         assert_eq!(res_g.called_lineage, "G");
-        assert_eq!(res_g.called_category, "Pure_Subtype");
+        assert_eq!(res_g.called_category, "Ancestral_Recombinant_Subtype");
         assert_eq!(res_g.structural_formula, "G0[A1:gp41..nef]");
 
         let seq_01 = tsv_profile_col(CERTIFIED_PROFILES_TSV, "CRF01_AE", 5);
