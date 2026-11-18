@@ -261,6 +261,59 @@ fn cli_pack_flag_classifies_influenza_reassortant() {
     assert_eq!(arr.len(), 1);
     assert_eq!(arr[0]["called_lineage"], "URF");
     assert_eq!(arr[0]["structural_formula"], "H1N1pdm09[H5N1:HA+NA]");
+    assert_eq!(arr[0]["pack_version"], "test");
+    assert_eq!(arr[0]["snapshot_date"], "2026-11-16");
+}
+
+#[test]
+fn export_pack_and_builtin_id_flag_work() {
+    let p = tmp("exported_iav_pack.json");
+    let o = bin()
+        .arg("--pack")
+        .arg("iav")
+        .arg("--export-pack")
+        .arg(&p)
+        .output()
+        .unwrap();
+    assert_eq!(o.status.code(), Some(0));
+    let v: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&p).unwrap()).unwrap();
+    let _ = std::fs::remove_file(&p);
+    assert_eq!(v["spec"]["reference_name"], "FluA-2.3.4.4b-8seg");
+    assert_eq!(v["spec"]["pack_version"], "2026.11-chronaeon-h5nx-v2");
+    assert!(v["profiles_fasta"].as_str().unwrap().contains(">EA1"));
+}
+
+#[test]
+fn cli_iav_stitches_unconcatenated_8segment_fasta() {
+    let raw_iav = concat!(
+        env!("CARGO_MANIFEST_DIR"),
+        "/../../docs/examples/iav_raw_8segments.fasta"
+    );
+    let out_json = tmp("iav_stitched_cli.json");
+    let o = bin()
+        .arg(raw_iav)
+        .arg("--pack")
+        .arg("iav")
+        .arg("--json")
+        .arg(&out_json)
+        .arg("-q")
+        .output()
+        .unwrap();
+    assert_eq!(
+        o.status.code(),
+        Some(0),
+        "stderr: {}",
+        String::from_utf8_lossy(&o.stderr)
+    );
+    let v: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&out_json).unwrap()).unwrap();
+    let _ = std::fs::remove_file(&out_json);
+    let arr = v.as_array().unwrap();
+    assert_eq!(arr.len(), 2);
+    assert_eq!(arr[0]["called_lineage"], "B3.13");
+    assert_eq!(arr[1]["called_lineage"], "D1.1");
+    assert_eq!(arr[0]["pack_version"], "2026.11-chronaeon-h5nx-v2");
 }
 
 #[test]
