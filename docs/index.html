@@ -2548,6 +2548,9 @@
       previousRunSnapshot: null,
       openPopoverId: null,
       rawFasta: '',
+      deferredFastaSource: null,
+      cancelledByUser: false,
+      activeFetchController: null,
       packMetas: {},
       response: null,
       elapsedMs: 0,
@@ -2729,6 +2732,7 @@
     window.flushAnalysisResults = function(fromStage) {
       if (fromStage <= 0) {
         state.response = null;
+        state.deferredFastaSource = null;
         state.s0QaPage = 1;
         state.s0SegPage = 1;
         state.s0QaSearch = '';
@@ -2851,12 +2855,13 @@
       });
     }
 
-    function setSelectedPack(packId) {
+    async function setSelectedPack(packId) {
       if (packId !== 'custom') state.customSpan16Loaded = false;
       state.selectedPack = packId;
       syncPackPills();
       syncParamSummaryBadge();
-      if (state.rawFasta && state.activeView !== 'landing') {
+      if (state.activeView !== 'landing' && (state.rawFasta || state.deferredFastaSource)) {
+        if (!state.rawFasta && !(await ensureRawFastaLoaded('Streaming FASTA for Selected Panel…'))) return;
         executeScreening(state.rawFasta, state.activeView);
       }
     }
@@ -2901,7 +2906,8 @@
         syncPackPills();
         closeModals();
         showToast(`Loaded custom pack: ${res.meta?.pathogen_name || 'custom'}`);
-        if (state.rawFasta && state.activeView !== 'landing') {
+        if (state.activeView !== 'landing' && (state.rawFasta || state.deferredFastaSource)) {
+          if (!state.rawFasta && !(await ensureRawFastaLoaded('Streaming FASTA for Custom Pack…'))) return;
           executeScreening(state.rawFasta, state.activeView);
         }
       } catch (err) {
@@ -2925,7 +2931,8 @@
         syncPackPills();
         setLed('ready', 'Span-16 Ready');
         showToast('Loaded 16-Founder SARS-CoV-2 Spanning Pack');
-        if (state.rawFasta && state.activeView !== 'landing') {
+        if (state.activeView !== 'landing' && (state.rawFasta || state.deferredFastaSource)) {
+          if (!state.rawFasta && !(await ensureRawFastaLoaded('Streaming FASTA for Custom Pack…'))) return;
           executeScreening(state.rawFasta, state.activeView);
         }
       } catch (err) {
@@ -3096,9 +3103,9 @@
     function buildCliCommand(p) {
       const packArgMap = {
         hiv1: '',
-        iav: ' --pack packs/influenza_a_8seg',
-        sc2: ' --pack packs/sars_cov2_wuhan',
-        sarbeco: ' --pack packs/sarbecovirus_wuhan',
+        iav: ' --pack iav',
+        sc2: ' --pack sc2',
+        sarbeco: ' --pack sarbeco',
         custom: state.customSpan16Loaded ? ' --pack sc2_spanning_16.pack.json' : ' --pack custom_pack.json',
       };
       const effPack = state.response?.active_pack || (state.selectedPack === 'auto' ? 'hiv1' : state.selectedPack);
@@ -3276,9 +3283,23 @@
       if (modal) modal.classList.add('hidden');
     }
 
+    function beginTrackedFetch() {
+      if (state.activeFetchController) {
+        try { state.activeFetchController.abort(); } catch (e) {}
+      }
+      state.cancelledByUser = false;
+      const ctrl = new AbortController();
+      state.activeFetchController = ctrl;
+      return ctrl.signal;
+    }
+
     window.cancelActiveScreening = async function() {
       state.cancelledByUser = true;
       state.running = false;
+      if (state.activeFetchController) {
+        try { state.activeFetchController.abort(); } catch (e) {}
+        state.activeFetchController = null;
+      }
       hideLoadingModal();
       document.getElementById('stepBtn0')?.classList.remove('running');
       setLed('ready', 'Cancelled');
@@ -3418,10 +3439,13 @@
       const results = resp.results || [];
 
       const activeIsAuto = state.selectedPack === 'auto';
+      const isPrecomputed = det?.confidence === 'precomputed' || asm?.mode_used === 'precomputed';
       document.getElementById('s0PackBadge').textContent = `${PACK_LABELS[resp.active_pack] || resp.active_pack}`;
-      document.getElementById('s0ConfBadge').textContent = activeIsAuto
-        ? `AUTO-DETECTED (${(det.confidence || 'high').toUpperCase()})`
-        : 'MANUAL SELECTION';
+      document.getElementById('s0ConfBadge').textContent = isPrecomputed
+        ? 'PRECOMPUTED REPORT'
+        : (activeIsAuto
+          ? `AUTO-DETECTED (${(det.confidence || 'high').toUpperCase()})`
+          : 'MANUAL SELECTION');
 
       const segMsg = asm.was_multi_record_assembled
         ? ` — Grouped ${asm.raw_record_count} segment records into ${asm.isolate_count} 8-segment isolate scaffold(s).`
@@ -3458,7 +3482,7 @@
         <div class="kpi-box">
           <div class="metric-caption">Runtime</div>
           <div class="metric-num">${state.elapsedMs.toFixed(1)} ms</div>
-          <div class="metric-sub">Local WebAssembly</div>
+          <div class="metric-sub">${isPrecomputed ? 'Precomputed Report' : 'Local WebAssembly'}</div>
         </div>
       `;
 
@@ -3579,9 +3603,12 @@
       setSelectedPack(packId);
     };
 
-    window.setSegMode = function(mode) {
+    window.setSegMode = async function(mode) {
       state.segMode = mode;
-      if (state.rawFasta) executeScreening(state.rawFasta, state.activeView);
+      if (state.activeView !== 'landing' && (state.rawFasta || state.deferredFastaSource)) {
+        if (!state.rawFasta && !(await ensureRawFastaLoaded('Streaming FASTA for Segment Re-Assembly…'))) return;
+        executeScreening(state.rawFasta, state.activeView);
+      }
     };
 
     window.applyParamPreset = function(preset) {
@@ -3607,21 +3634,41 @@
       syncParamSummaryBadge();
     };
 
-    window.reapplyParams = async function() {
-      if (!state.rawFasta && state.deferredFastaUrl) {
-        try {
-          showLoadingModal({
-            phase: 'fetch',
-            title: 'Streaming FASTA for Custom Thresholds…',
-            sub: `Fetching ${state.deferredFastaUrl.split('/').pop() || 'cohort FASTA'}…`,
-            estSec: 3,
-          });
-          state.rawFasta = await fetchFastaText({ url: state.deferredFastaUrl });
-        } catch (err) {
-          hideLoadingModal();
-          alert('Could not fetch FASTA for re-run: ' + (err && err.message ? err.message : err));
-          return;
+    async function ensureRawFastaLoaded(modalTitle = 'Streaming FASTA Dataset…') {
+      if (state.rawFasta) return true;
+      const src = state.deferredFastaSource;
+      if (!src) return false;
+      const signal = beginTrackedFetch();
+      const subLabel = src.accessions
+        ? `Fetching ${src.accessions.length.toLocaleString()} NCBI accession(s)…`
+        : `Fetching ${src.url.split('/').pop() || 'cohort FASTA'}…`;
+      try {
+        showLoadingModal({
+          phase: 'fetch',
+          title: modalTitle,
+          sub: subLabel,
+          estSec: 3,
+        });
+        const fastaText = await fetchFastaText({ ...src, signal });
+        if (signal.aborted || state.cancelledByUser) return false;
+        state.rawFasta = fastaText;
+        state.deferredFastaSource = null;
+        return true;
+      } catch (err) {
+        hideLoadingModal();
+        if (state.cancelledByUser || err?.name === 'AbortError') return false;
+        alert('Could not fetch FASTA: ' + (err && err.message ? err.message : err));
+        return false;
+      } finally {
+        if (state.activeFetchController?.signal === signal) {
+          state.activeFetchController = null;
         }
+      }
+    }
+
+    window.reapplyParams = async function() {
+      if (!state.rawFasta && !(await ensureRawFastaLoaded('Streaming FASTA for Custom Thresholds…'))) {
+        return;
       }
       if (!state.rawFasta) return;
       if (state.response && state.response.results) {
@@ -5450,6 +5497,7 @@
       const resp = await fetch(c.file);
       if (resp.ok) {
         const text = await resp.text();
+        state.deferredFastaSource = null;
         maybePreflightAndRun(text);
       }
     };
@@ -5458,6 +5506,7 @@
       const txt = document.getElementById('pasteTextarea').value.trim();
       if (!txt) return;
       closeModals();
+      state.deferredFastaSource = null;
       maybePreflightAndRun(txt);
     };
 
@@ -5475,29 +5524,18 @@
     };
 
     // Fetch FASTA text from NCBI accessions (array of ids) or a CORS-enabled URL.
-    async function fetchFastaText({ accessions, url }) {
+    async function fetchFastaText({ accessions, url, signal = undefined }) {
       let fastaText = '';
       if (accessions) {
         if (!accessions.length) throw new Error('Enter at least one NCBI accession');
         const efetch = `https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=nuccore&id=${encodeURIComponent(accessions.join(','))}&rettype=fasta&retmode=text`;
-        const r = await fetch(efetch);
+        const r = await fetch(efetch, signal ? { signal } : undefined);
         if (!r.ok) throw new Error(`NCBI efetch HTTP ${r.status}`);
         fastaText = await r.text();
       } else {
-        let u = (url || '').trim();
+        const u = (url || '').trim();
         if (!u) throw new Error('Enter a CORS-enabled FASTA URL');
-        const ghMatch = u.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
-        if (ghMatch) {
-          u = `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}/${ghMatch[3]}`;
-        }
-        const r = await fetch(u);
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        // A .gz FASTA is inflated in the browser, so large cohorts download compressed.
-        if (/\.gz(\?|#|$)/i.test(u) && r.body && typeof DecompressionStream === 'function') {
-          fastaText = await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
-        } else {
-          fastaText = await r.text();
-        }
+        fastaText = await fetchTextMaybeGzip(u, signal);
       }
       if (!fastaText.includes('>')) throw new Error('Response did not contain FASTA records');
       return fastaText;
@@ -5518,6 +5556,7 @@
         msgEl.textContent = '';
         btn.disabled = false;
         closeModals();
+        state.deferredFastaSource = null;
         maybePreflightAndRun(fastaText);
       } catch (err) {
         msgEl.textContent = `Fetch error: ${err && err.message ? err.message : err}`;
@@ -5562,8 +5601,14 @@
       downloadBlob(JSON.stringify(state.response, null, 2), `eggman_${state.response.active_pack}_audit.json`, 'application/json');
     };
 
-    window.downloadStitchedFasta = function() {
-      const fa = state.response?.assembled_fasta || state.rawFasta;
+    window.downloadStitchedFasta = async function() {
+      let fa = state.response?.assembled_fasta || state.rawFasta;
+      if (!fa && state.deferredFastaSource) {
+        const ok = await ensureRawFastaLoaded('Streaming FASTA for Export…');
+        hideLoadingModal();
+        if (!ok) return;
+        fa = state.rawFasta;
+      }
       if (!fa) return;
       downloadBlob(fa, `eggman_${state.response?.active_pack || 'virus'}_scaffolds.fasta`, 'text/plain');
     };
@@ -5605,6 +5650,7 @@
       if (!files.length) return;
       const texts = await Promise.all(files.map(f => f.text()));
       const combined = texts.map(t => t.trim()).filter(Boolean).join('\n');
+      state.deferredFastaSource = null;
       maybePreflightAndRun(combined);
     }
 
@@ -5791,20 +5837,24 @@
     }
 
     // Deep links: ?pack=<auto|hiv1|iav|sc2|sarbeco> or ?pack_url=<https/same-origin .pack.json(.gz)>
-    // with optional ?accessions=A,B,C (NCBI) or ?fasta_url=<https/same-origin FASTA(.gz)>.
+    // with optional ?report_url=<https/same-origin .json(.gz)>, ?accessions=A,B,C (NCBI), or ?fasta_url=<https/same-origin FASTA(.gz)>.
     // Opens, fetches and screens on load.
-    async function fetchTextMaybeGzip(url) {
+    async function fetchTextMaybeGzip(url, signal = undefined) {
       let u = (url || '').trim();
       const ghMatch = u.match(/^https:\/\/github\.com\/([^/]+)\/([^/]+)\/blob\/(.+)$/);
       if (ghMatch) {
         u = `https://raw.githubusercontent.com/${ghMatch[1]}/${ghMatch[2]}/${ghMatch[3]}`;
       }
-      const r = await fetch(u);
+      const r = await fetch(u, signal ? { signal } : undefined);
       if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      if (/\.gz(\?|#|$)/i.test(u) && r.body && typeof DecompressionStream === 'function') {
-        return await new Response(r.body.pipeThrough(new DecompressionStream('gzip'))).text();
+      const buf = await r.arrayBuffer();
+      const u8 = new Uint8Array(buf);
+      const isGzip = u8.length >= 2 && u8[0] === 0x1f && u8[1] === 0x8b;
+      if (isGzip && typeof DecompressionStream === 'function') {
+        const ds = new Blob([buf]).stream().pipeThrough(new DecompressionStream('gzip'));
+        return await new Response(ds).text();
       }
-      return await r.text();
+      return new TextDecoder('utf-8').decode(buf);
     }
 
     function resolveSafeLinkUrl(rawUrl) {
@@ -5818,13 +5868,38 @@
       return null;
     }
 
+    function inferPackFromSequenceResults(rows) {
+      if (!Array.isArray(rows) || !rows.length) return 'hiv1';
+      const pv = (rows.find(r => r && r.pack_version)?.pack_version || '').trim();
+      if (pv) {
+        if (state.customPackMeta && state.customPackMeta.pack_version === pv) return 'custom';
+        for (const id of ['hiv1', 'iav', 'sc2', 'sarbeco']) {
+          if (state.packMetas[id] && state.packMetas[id].pack_version === pv) return id;
+        }
+        const lowPv = pv.toLowerCase();
+        if (lowPv.includes('h5') || lowPv.includes('iav') || lowPv.includes('flu') || lowPv.includes('genoflu')) return 'iav';
+        if (lowPv.includes('sarbeco')) return 'sarbeco';
+        if (lowPv.includes('sc2') || lowPv.includes('sars') || lowPv.includes('wuhan')) return 'sc2';
+        if (lowPv.includes('hiv') || lowPv.includes('hxb2')) return 'hiv1';
+      }
+      const iavGenes = new Set(['PB2', 'PB1', 'PA', 'HA', 'NP', 'NA', 'MP', 'NS']);
+      const sc2Genes = new Set(['ORF1a', 'ORF1b', 'S', 'ORF3a', 'E', 'M', 'ORF6', 'ORF7a', 'ORF8', 'N', 'ORF10']);
+      if (rows.some(r => (r.segments || []).some(s => iavGenes.has(s.short_gene)))) return 'iav';
+      if (rows.some(r => /^(Bat_|SARS1_|SARS2_)/.test(r.backbone_trunk || ''))) return 'sarbeco';
+      if (rows.some(r => (r.hxb2_span_end || 0) > 15000 || (r.segments || []).some(s => sc2Genes.has(s.short_gene)))) return 'sc2';
+      return 'hiv1';
+    }
+
     function applyPrecomputedReport(rawReport, elapsedOverrideMs = 0) {
+      state.rawFasta = '';
       let resp;
-      const fallbackPack = state.selectedPack === 'auto' ? 'iav' : state.selectedPack;
+      const fallbackPack = state.selectedPack === 'auto'
+        ? inferPackFromSequenceResults(Array.isArray(rawReport) ? rawReport : rawReport?.results)
+        : state.selectedPack;
       if (Array.isArray(rawReport)) {
         const meta = fallbackPack === 'custom'
           ? state.customPackMeta
-          : (state.packMetas[fallbackPack] || state.packMetas.iav || state.packMetas.hiv1);
+          : (state.packMetas[fallbackPack] || state.packMetas.hiv1 || state.packMetas.iav);
         const landmarks = (meta && meta.landmarks) || [];
         const isolates = (meta && meta.is_segmented) ? rawReport.map(r => {
           const segSlots = landmarks.map((lm, sIdx) => {
@@ -5976,7 +6051,7 @@
       }
 
       let resolved = null;
-      if (!accs.length && fastaUrl) {
+      if (fastaUrl) {
         resolved = resolveSafeLinkUrl(fastaUrl);
         if (!resolved) {
           setLed('error', 'fasta_url must be https or same-origin');
@@ -5984,77 +6059,93 @@
         }
       }
 
-      if (resolvedPack) {
-        setLed('busy', 'Loading pack from link…');
-        showLoadingModal({
-          phase: 'fetch',
-          title: 'Loading Reference Profile Pack…',
-          sub: `Pack: ${resolvedPack.pathname.split('/').filter(Boolean).pop() || resolvedPack.host}`,
-          estSec: 2,
-        });
-        try {
-          const jsonStr = await fetchTextMaybeGzip(resolvedPack.href);
-          const res = await callWasm('load_custom_pack', { jsonStr, fastaStr: '' });
-          if (!res.ok) throw new Error(res.error || 'Pack load failed');
-          state.customPackMeta = res.meta;
-          state.loadedCustomPackBundle = { jsonStr, fastaStr: '' };
-          state.customSpan16Loaded = false;
-          state.selectedPack = 'custom';
-          syncPackPills();
-          setLed('ready', `Ready • ${res.meta?.pathogen_name || 'Custom'}`);
-          if (!resolvedReport && !accs.length && !resolved) {
+      const signal = beginTrackedFetch();
+      try {
+        if (resolvedPack) {
+          setLed('busy', 'Loading pack from link…');
+          showLoadingModal({
+            phase: 'fetch',
+            title: 'Loading Reference Profile Pack…',
+            sub: `Pack: ${resolvedPack.pathname.split('/').filter(Boolean).pop() || resolvedPack.host}`,
+            estSec: 2,
+          });
+          try {
+            const jsonStr = await fetchTextMaybeGzip(resolvedPack.href, signal);
+            if (signal.aborted || state.cancelledByUser) return;
+            const res = await callWasm('load_custom_pack', { jsonStr, fastaStr: '' });
+            if (signal.aborted || state.cancelledByUser) return;
+            if (!res.ok) throw new Error(res.error || 'Pack load failed');
+            state.customPackMeta = res.meta;
+            state.loadedCustomPackBundle = { jsonStr, fastaStr: '' };
+            state.customSpan16Loaded = false;
+            state.selectedPack = 'custom';
+            syncPackPills();
+            setLed('ready', `Ready • ${res.meta?.pathogen_name || 'Custom'}`);
+            if (!resolvedReport && !accs.length && !resolved) {
+              hideLoadingModal();
+              showToast(`Loaded reference pack: ${res.meta?.pathogen_name || 'custom'}`);
+              return;
+            }
+          } catch (err) {
             hideLoadingModal();
-            showToast(`Loaded reference pack: ${res.meta?.pathogen_name || 'custom'}`);
+            if (state.cancelledByUser || err?.name === 'AbortError') return;
+            setLed('error', `Pack fetch failed: ${err && err.message ? err.message : err}`);
             return;
           }
-        } catch (err) {
-          hideLoadingModal();
-          setLed('error', `Pack fetch failed: ${err && err.message ? err.message : err}`);
-          return;
         }
-      }
 
-      if (resolvedReport) {
-        state.deferredFastaUrl = resolved ? resolved.href : null;
-        const repLabel = resolvedReport.pathname.split('/').filter(Boolean).pop() || resolvedReport.host;
-        setLed('busy', 'Loading precomputed report…');
+        if (resolvedReport) {
+          state.deferredFastaSource = accs.length ? { accessions: accs } : (resolved ? { url: resolved.href } : null);
+          const repLabel = resolvedReport.pathname.split('/').filter(Boolean).pop() || resolvedReport.host;
+          setLed('busy', 'Loading precomputed report…');
+          showLoadingModal({
+            phase: 'fetch',
+            title: 'Loading Precomputed Workflow Report…',
+            sub: `Source: ${repLabel}`,
+            estSec: 1,
+          });
+          try {
+            const t0 = performance.now();
+            const jsonStr = await fetchTextMaybeGzip(resolvedReport.href, signal);
+            if (signal.aborted || state.cancelledByUser) return;
+            const parsed = JSON.parse(jsonStr);
+            if (signal.aborted || state.cancelledByUser) return;
+            applyPrecomputedReport(parsed, performance.now() - t0);
+            return;
+          } catch (err) {
+            hideLoadingModal();
+            if (state.cancelledByUser || err?.name === 'AbortError') return;
+            setLed('error', `Report fetch failed: ${err && err.message ? err.message : err}`);
+            return;
+          }
+        }
+
+        if (!accs.length && !resolved) return;
+        state.deferredFastaSource = null;
+        setLed('', 'Fetching FASTA from link…');
+        const srcLabel = accs.length
+          ? `${accs.length.toLocaleString()} NCBI accession${accs.length === 1 ? '' : 's'} via E-utilities`
+          : (resolved.pathname.split('/').filter(Boolean).pop() || resolved.host);
         showLoadingModal({
           phase: 'fetch',
-          title: 'Loading Precomputed Workflow Report…',
-          sub: `Source: ${repLabel}`,
-          estSec: 1,
+          title: 'Streaming FASTA Dataset…',
+          sub: `Source: ${srcLabel}`,
+          estSec: 4,
         });
         try {
-          const t0 = performance.now();
-          const jsonStr = await fetchTextMaybeGzip(resolvedReport.href);
-          const parsed = JSON.parse(jsonStr);
-          applyPrecomputedReport(parsed, performance.now() - t0);
-          return;
+          const fastaText = await fetchFastaText(accs.length ? { accessions: accs, signal } : { url: resolved.href, signal });
+          if (signal.aborted || state.cancelledByUser) return;
+          // The link asked for this dataset, so skip the large-input confirmation.
+          executeScreening(fastaText, null);
         } catch (err) {
           hideLoadingModal();
-          setLed('error', `Report fetch failed: ${err && err.message ? err.message : err}`);
-          return;
+          if (state.cancelledByUser || err?.name === 'AbortError') return;
+          setLed('error', `Link fetch failed: ${err && err.message ? err.message : err}`);
         }
-      }
-
-      if (!accs.length && !resolved) return;
-      setLed('', 'Fetching FASTA from link…');
-      const srcLabel = accs.length
-        ? `${accs.length.toLocaleString()} NCBI accession${accs.length === 1 ? '' : 's'} via E-utilities`
-        : (resolved.pathname.split('/').filter(Boolean).pop() || resolved.host);
-      showLoadingModal({
-        phase: 'fetch',
-        title: 'Streaming FASTA Dataset…',
-        sub: `Source: ${srcLabel}`,
-        estSec: 4,
-      });
-      try {
-        const fastaText = await fetchFastaText(accs.length ? { accessions: accs } : { url: resolved.href });
-        // The link asked for this dataset, so skip the large-input confirmation.
-        executeScreening(fastaText, null);
-      } catch (err) {
-        hideLoadingModal();
-        setLed('error', `Link fetch failed: ${err && err.message ? err.message : err}`);
+      } finally {
+        if (state.activeFetchController?.signal === signal) {
+          state.activeFetchController = null;
+        }
       }
     }
 
