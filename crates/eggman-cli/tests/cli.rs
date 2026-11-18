@@ -133,6 +133,10 @@ fn cli_pack_flag_classifies_influenza_reassortant() {
         fallback_profile: None,
         display_alias: None,
         clonal_certified_label: None,
+        t_mrca: None,
+        t_mrca_ci: None,
+        first_sampled_year: None,
+        chronaeon_half_life_yr: None,
     };
     let spec = PathogenSpec {
         pathogen_name: "Influenza A".to_string(),
@@ -169,6 +173,8 @@ fn cli_pack_flag_classifies_influenza_reassortant() {
         snapshot_date: "2026-11-16".to_string(),
         curation_sources: String::new(),
         certification_criteria: String::new(),
+        default_temporal_slack_yr: None,
+        chronaeon_half_life_yr: None,
     };
 
     const BASES: [u8; 4] = [b'A', b'C', b'G', b'T'];
@@ -255,5 +261,50 @@ fn cli_pack_flag_classifies_influenza_reassortant() {
     assert_eq!(arr.len(), 1);
     assert_eq!(arr[0]["called_lineage"], "URF");
     assert_eq!(arr[0]["structural_formula"], "H1N1pdm09[H5N1:HA+NA]");
+}
+
+#[test]
+fn cli_temporal_guard_and_query_year_override() {
+    let out_json = tmp("demos_temporal.json");
+    let o = bin()
+        .arg(demos())
+        .arg("--temporal-guard")
+        .arg("--query-year")
+        .arg("1985.0")
+        .arg("--temporal-slack-yr")
+        .arg("1.0")
+        .arg("--json")
+        .arg(&out_json)
+        .arg("-q")
+        .output()
+        .unwrap();
+    assert_eq!(o.status.code(), Some(0), "stderr: {}", String::from_utf8_lossy(&o.stderr));
+    let v: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&out_json).unwrap()).unwrap();
+    let _ = std::fs::remove_file(&out_json);
+    let arr = v.as_array().unwrap();
+    assert_eq!(arr.len(), 5);
+    for rec in arr {
+        assert_eq!(rec["query_year"].as_f64().unwrap(), 1985.0);
+        let masked: Vec<&str> = rec["masked_future_trunks"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter_map(|x| x.as_str())
+            .collect();
+        // K (t_mrca=1996.0) exceeds 1985 + 1.0 = 1986.0 and must be masked
+        assert!(masked.contains(&"K"), "expected K masked in {:?}", masked);
+    }
+
+    // Invalid query year must exit cleanly with code 2
+    let bad = bin()
+        .arg(demos())
+        .arg("--temporal-guard")
+        .arg("--query-year")
+        .arg("1800.0")
+        .arg("-q")
+        .output()
+        .unwrap();
+    assert_eq!(bad.status.code(), Some(2));
 }
 

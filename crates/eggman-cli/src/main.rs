@@ -1,6 +1,8 @@
 use clap::Parser;
 use rayon::prelude::*;
-use eggman_core::{PathogenSpec, EggmanEngine, ScreeningConfig, SequenceResult};
+use eggman_core::{
+    EggmanEngine, PathogenSpec, ScreeningConfig, SequenceResult, TemporalGuardConfig,
+};
 use std::fs;
 use std::io::{self, Write};
 use std::process::exit;
@@ -66,6 +68,18 @@ struct Args {
     #[arg(long, visible_alias = "certified-profiles")]
     profiles: Option<PathBuf>,
 
+    /// Enable non-lookahead temporal donor admissibility guarding
+    #[arg(long, default_value_t = false)]
+    temporal_guard: bool,
+
+    /// Explicit decimal query year override for --temporal-guard (default: parsed from FASTA header)
+    #[arg(long)]
+    query_year: Option<f64>,
+
+    /// Temporal lookahead tolerance in years for --temporal-guard (default: pack setting, 0.5 non-HIV / 3.0 HIV-1)
+    #[arg(long)]
+    temporal_slack_yr: Option<f64>,
+
     /// Quiet mode (suppress per-sequence console report)
     #[arg(short, long, default_value_t = false)]
     quiet: bool,
@@ -123,6 +137,15 @@ fn main() {
         die(2, &format!("invalid configuration: {}", e));
     }
 
+    let temporal_cfg = TemporalGuardConfig {
+        enabled: args.temporal_guard,
+        query_year: args.query_year,
+        slack_yr: args.temporal_slack_yr,
+    };
+    if let Err(e) = temporal_cfg.validate() {
+        die(2, &format!("invalid temporal guard configuration: {}", e));
+    }
+
     let t0 = Instant::now();
     let bytes = fs::read(&fasta_path)
         .unwrap_or_else(|e| die(2, &format!("failed to read FASTA file {:?}: {}", fasta_path, e)));
@@ -170,7 +193,7 @@ fn main() {
 
     let results: Vec<SequenceResult> = records
         .par_iter()
-        .map(|(hdr, seq)| engine.classify_sequence(hdr, seq, &cfg))
+        .map(|(hdr, seq)| engine.classify_sequence_with_temporal(hdr, seq, &cfg, &temporal_cfg))
         .collect();
 
     let elapsed = t0.elapsed().as_secs_f64();
@@ -178,7 +201,7 @@ fn main() {
     if let Some(f) = csv_file.as_mut() {
         let mut csv_lines = Vec::with_capacity(results.len() + 1);
         csv_lines.push(
-            "sequence_id,raw_length_nt,mapped_coding_nt,hxb2_span_start,hxb2_span_end,locus_scope,alignment_mode,called_lineage,called_category,call_identity_pct,call_stem_snps,call_p_value,epidemiological_formula,epidemiological_barcode,basal_formula,basal_barcode,descriptive_name,structural_formula,backbone_trunk,n_segments,n_breakpoints,hxb2_barcode,ci_bracketed_barcode,compendium_matches".to_string(),
+            "sequence_id,raw_length_nt,mapped_coding_nt,hxb2_span_start,hxb2_span_end,locus_scope,alignment_mode,called_lineage,called_category,call_identity_pct,call_stem_snps,call_p_value,epidemiological_formula,epidemiological_barcode,basal_formula,basal_barcode,descriptive_name,structural_formula,backbone_trunk,n_segments,n_breakpoints,hxb2_barcode,ci_bracketed_barcode,compendium_matches,query_year,masked_future_trunks".to_string(),
         );
         for r in &results {
             let matches_joined = r
@@ -187,6 +210,11 @@ fn main() {
                 .map(|m| format!("{} ({})", m.label, m.descriptive_name))
                 .collect::<Vec<_>>()
                 .join("; ");
+            let qy_str = r
+                .query_year
+                .map(|y| format!("{:.4}", y))
+                .unwrap_or_default();
+            let masked_joined = r.masked_future_trunks.join(";");
             let (id_str, stem_str, p_str) = if let Some(sup) = &r.call_support {
                 (
                     format!("{:.1}", sup.identity_pct),
@@ -197,7 +225,7 @@ fn main() {
                 (String::new(), String::new(), String::new())
             };
             csv_lines.push(format!(
-                "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
+                "{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{},{}",
                 csv_quote(&r.sequence_id, true),
                 r.raw_length_nt,
                 r.mapped_coding_nt,
@@ -221,7 +249,9 @@ fn main() {
                 r.n_breakpoints,
                 csv_quote(&r.hxb2_barcode, false),
                 csv_quote(&r.ci_bracketed_barcode, false),
-                csv_quote(&matches_joined, true)
+                csv_quote(&matches_joined, true),
+                qy_str,
+                csv_quote(&masked_joined, false)
             ));
         }
         let path = args.out.as_ref().unwrap();
@@ -281,6 +311,18 @@ fn main() {
             out.push_str(&format!("  Basal Ancestral Map : {}\n", r.descriptive_name));
             out.push_str(&format!("  Basal Ref Barcode   : {}\n", r.hxb2_barcode));
             out.push_str(&format!("  CI-Bracketed Map    : {}\n", r.ci_bracketed_barcode));
+            if r.query_year.is_some() || !r.masked_future_trunks.is_empty() {
+                let qy = r
+                    .query_year
+                    .map(|y| format!("{:.4}", y))
+                    .unwrap_or_else(|| "none".to_string());
+                let masked = if r.masked_future_trunks.is_empty() {
+                    "none".to_string()
+                } else {
+                    r.masked_future_trunks.join(",")
+                };
+                out.push_str(&format!("  Temporal Guard      : query_year={} | masked_trunks=[{}]\n", qy, masked));
+            }
             let match_strs: Vec<String> = r
                 .matches
                 .iter()

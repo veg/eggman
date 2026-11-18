@@ -1,9 +1,9 @@
 {
   "pathogen_name": "SARS-CoV-2",
   "reference_name": "Wuhan-Hu-1",
-  "pack_version": "2026.11-pango-sc2",
-  "snapshot_date": "2026-11-16",
-  "curation_sources": "NCBI RefSeq Wuhan-Hu-1 (NC_045512.2), Pango designation / Nextclade consensus profiles (11 parental waves + 11 X* recombinant profiles; XDV withheld for OOD validation)",
+  "pack_version": "2026.11-chronaeon-sc2-v3",
+  "snapshot_date": "2026-11-18",
+  "curation_sources": "ChronAeon exponential time-decay (t_1/2=0.25 yr) across 16 spanning Tier-1 founder profiles paired with circulating clade-stem profiles for 12 pure callers + 16 Tier-2 recombinants (10,062 Global Union + BV-BRC dated assemblies); clock-calibrated via ChronAeon Steiner+Gamma4 and IQ-TREE 2/LSD2/TreeTime.",
   "certification_criteria": "4-gate guarded caller on Wuhan-Hu-1 coding coordinates (266..29674); default 5-SNP Fisher floor (p < 1e-4, gamma = 7.0) or CoV 4-SNP mode (min_snps = 3, p < 0.01, gamma = 3.5)",
   "ref_full_len": 29903,
   "coding_start": 266,
@@ -112,7 +112,14 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": "B"
+      "clonal_certified_label": "B",
+      "t_mrca": 2019.8067,
+      "t_mrca_ci": [
+        2019.2691,
+        2019.9348
+      ],
+      "first_sampled_year": 2019.9836,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "B.1.1.7",
@@ -121,7 +128,30 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": "B.1.1.7"
+      "clonal_certified_label": "B.1.1.7",
+      "t_mrca": 2020.5607,
+      "t_mrca_ci": [
+        2020.3195,
+        2020.7192
+      ],
+      "first_sampled_year": 2020.8087,
+      "chronaeon_half_life_yr": 0.25
+    },
+    {
+      "name": "P.1",
+      "is_pure_basal": true,
+      "penalty": 0.0,
+      "active_range": null,
+      "fallback_profile": null,
+      "display_alias": null,
+      "clonal_certified_label": "P.1",
+      "t_mrca": 2020.6607,
+      "t_mrca_ci": [
+        2020.1748,
+        2020.9126
+      ],
+      "first_sampled_year": 2021.0,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "B.1.617.2",
@@ -130,7 +160,14 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": "B.1.617.2"
+      "clonal_certified_label": "B.1.617.2",
+      "t_mrca": 2020.08,
+      "t_mrca_ci": [
+        2019.34,
+        2020.54
+      ],
+      "first_sampled_year": 2020.8005,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "BA.1",
@@ -139,7 +176,14 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": "BA.1"
+      "clonal_certified_label": "BA.1",
+      "t_mrca": 2021.5115,
+      "t_mrca_ci": [
+        2021.077,
+        2021.72
+      ],
+      "first_sampled_year": 2021.8247,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "BA.2",
@@ -148,7 +192,30 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": "BA.2"
+      "clonal_certified_label": "BA.2",
+      "t_mrca": 2021.9304,
+      "t_mrca_ci": [
+        2021.731,
+        2021.9188
+      ],
+      "first_sampled_year": 2021.8712,
+      "chronaeon_half_life_yr": 0.25
+    },
+    {
+      "name": "BA.4",
+      "is_pure_basal": true,
+      "penalty": 0.0,
+      "active_range": null,
+      "fallback_profile": null,
+      "display_alias": null,
+      "clonal_certified_label": "BA.4",
+      "t_mrca": 2022.1495,
+      "t_mrca_ci": [
+        2021.8646,
+        2022.1912
+      ],
+      "first_sampled_year": 2022.2192,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "BA.5",
@@ -157,7 +224,14 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": "BA.5"
+      "clonal_certified_label": "BA.5",
+      "t_mrca": 2021.8632,
+      "t_mrca_ci": [
+        2021.5683,
+        2022.0431
+      ],
+      "first_sampled_year": 2022.0849,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "BJ.1",
@@ -166,7 +240,14 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": null
+      "clonal_certified_label": null,
+      "t_mrca": 2022.6162,
+      "t_mrca_ci": [
+        2022.5624,
+        2022.6368
+      ],
+      "first_sampled_year": 2022.6411,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "BM.1.1.1",
@@ -175,7 +256,14 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": null
+      "clonal_certified_label": null,
+      "t_mrca": 2022.1556,
+      "t_mrca_ci": [
+        2021.44,
+        2022.45
+      ],
+      "first_sampled_year": 2022.6192,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "JN.1",
@@ -184,7 +272,14 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": "JN.1"
+      "clonal_certified_label": "JN.1",
+      "t_mrca": 2023.3577,
+      "t_mrca_ci": [
+        2022.8007,
+        2023.6578
+      ],
+      "first_sampled_year": 2023.8959,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "KP.3.3",
@@ -193,7 +288,14 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": null
+      "clonal_certified_label": null,
+      "t_mrca": 2024.2099,
+      "t_mrca_ci": [
+        2023.8006,
+        2024.3709
+      ],
+      "first_sampled_year": 2024.4098,
+      "chronaeon_half_life_yr": 0.25
     },
     {
       "name": "KS.1.1",
@@ -202,12 +304,69 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": null
+      "clonal_certified_label": null,
+      "t_mrca": 2023.95,
+      "t_mrca_ci": [
+        2022.96,
+        2024.22
+      ],
+      "first_sampled_year": 2024.4426,
+      "chronaeon_half_life_yr": 0.25
+    },
+    {
+      "name": "BA.3.2",
+      "is_pure_basal": true,
+      "penalty": 0.0,
+      "active_range": null,
+      "fallback_profile": null,
+      "display_alias": null,
+      "clonal_certified_label": "BA.3.2",
+      "t_mrca": 2024.52,
+      "t_mrca_ci": [
+        2022.94,
+        2025.13
+      ],
+      "first_sampled_year": 2025.9534,
+      "chronaeon_half_life_yr": 0.25
+    },
+    {
+      "name": "LF.7",
+      "is_pure_basal": true,
+      "penalty": 0.0,
+      "active_range": null,
+      "fallback_profile": null,
+      "display_alias": null,
+      "clonal_certified_label": "LF.7",
+      "t_mrca": 2024.3958,
+      "t_mrca_ci": [
+        2024.3526,
+        2024.4671
+      ],
+      "first_sampled_year": 2024.571,
+      "chronaeon_half_life_yr": 0.25
+    },
+    {
+      "name": "LP.8.1",
+      "is_pure_basal": true,
+      "penalty": 0.0,
+      "active_range": null,
+      "fallback_profile": null,
+      "display_alias": null,
+      "clonal_certified_label": "LP.8.1",
+      "t_mrca": 2024.6609,
+      "t_mrca_ci": [
+        2024.285,
+        2024.8407
+      ],
+      "first_sampled_year": 2024.8279,
+      "chronaeon_half_life_yr": 0.25
     }
   ],
   "ghost_relabel_rule": null,
   "align_founder_keys": [],
   "epi_founder_order": [],
   "epi_founder_penalty": 0.005,
-  "epi_certified_replacements": []
+  "epi_certified_replacements": [],
+  "default_temporal_slack_yr": 0.5,
+  "chronaeon_half_life_yr": 0.25
 }

@@ -96,6 +96,46 @@ pub struct TrunkSpec {
     pub display_alias: Option<String>,
     #[serde(default)]
     pub clonal_certified_label: Option<String>,
+    #[serde(default)]
+    pub t_mrca: Option<f64>,
+    #[serde(default)]
+    pub t_mrca_ci: Option<(f64, f64)>,
+    #[serde(default)]
+    pub first_sampled_year: Option<f64>,
+    #[serde(default)]
+    pub chronaeon_half_life_yr: Option<f64>,
+}
+
+impl TrunkSpec {
+    /// Admissible emergence floor `min(t_mrca_ci_low, t_mrca, first_sampled_year)`.
+    /// Returns `None` if no finite temporal bounds exist for this trunk.
+    pub fn emergence_floor(&self) -> Option<f64> {
+        min_temporal_floor(
+            self.t_mrca_ci.map(|(lo, _)| lo),
+            self.t_mrca,
+            self.first_sampled_year,
+        )
+    }
+}
+
+fn min_temporal_floor(
+    t_mrca_ci_low: Option<f64>,
+    t_mrca: Option<f64>,
+    first_sampled_year: Option<f64>,
+) -> Option<f64> {
+    let mut floor: Option<f64> = None;
+    for candidate in [t_mrca_ci_low, t_mrca, first_sampled_year]
+        .into_iter()
+        .flatten()
+    {
+        if candidate.is_finite() {
+            floor = Some(match floor {
+                Some(prev) => prev.min(candidate),
+                None => candidate,
+            });
+        }
+    }
+    floor
 }
 
 /// Rule for rescuing unattributed ghost segments that match a known extinct/unsampled donor lineage.
@@ -156,17 +196,48 @@ pub struct PathogenSpec {
     pub curation_sources: String,
     #[serde(default)]
     pub certification_criteria: String,
+    #[serde(default)]
+    pub default_temporal_slack_yr: Option<f64>,
+    #[serde(default)]
+    pub chronaeon_half_life_yr: Option<f64>,
 }
 
 impl PathogenSpec {
+    /// Effective admissible lookahead tolerance (years) for `--temporal-guard`.
+    /// Defaults to `3.0` yr for HIV-1 packs and `0.5` yr for non-HIV external packs.
+    pub fn effective_temporal_slack_yr(&self) -> f64 {
+        if let Some(s) = self.default_temporal_slack_yr {
+            if s.is_finite() && s >= 0.0 {
+                return s;
+            }
+        }
+        if self.pathogen_name.to_ascii_lowercase().contains("hiv") {
+            3.0
+        } else {
+            0.5
+        }
+    }
+
     /// Embedded HIV-1 Group M reference specification (HXB2 9,719 nt / coding 790..9417).
     pub fn hiv1_group_m_default() -> Self {
-        let pure_names = [
-            "A1", "A2", "A6", "B", "C", "D", "F1", "F2", "G0", "H", "J", "K", "L",
+        let pure_meta: [(&str, f64, Option<(f64, f64)>, f64); 13] = [
+            ("A1", 1959.7, Some((1954.1, 1964.1)), 1985.0),
+            ("A2", 1987.0, None, 1987.0),
+            ("A6", 1982.8, Some((1971.4, 1989.3)), 1999.0),
+            ("B", 1967.8, Some((1965.1, 1970.2)), 1979.0),
+            ("C", 1951.4, Some((1945.0, 1956.5)), 1986.0),
+            ("D", 1966.1, Some((1958.8, 1971.2)), 1983.0),
+            ("F1", 1968.5, Some((1952.7, 1977.3)), 1989.0),
+            ("F2", 1983.8, Some((1974.3, 1989.0)), 1995.0),
+            ("G0", 1961.5, Some((1953.4, 1967.5)), 1987.0),
+            ("H", 1982.0, Some((1967.0, 1987.7)), 1990.0),
+            ("J", 1986.0, Some((1978.1, 1989.6)), 1993.0),
+            ("K", 1996.0, None, 1996.0),
+            ("L", 1983.0, None, 1983.0),
         ];
-        let mut basal_trunks: Vec<TrunkSpec> = pure_names
+        let mut basal_trunks: Vec<TrunkSpec> = pure_meta
             .iter()
-            .map(|&name| TrunkSpec {
+            .map(|&(name, t_mrca, t_mrca_ci, first_sampled)| TrunkSpec {
                 name: name.to_string(),
                 is_pure_basal: true,
                 penalty: 0.0,
@@ -182,6 +253,10 @@ impl PathogenSpec {
                 } else {
                     None
                 },
+                t_mrca: Some(t_mrca),
+                t_mrca_ci,
+                first_sampled_year: Some(first_sampled),
+                chronaeon_half_life_yr: Some(6.93),
             })
             .collect();
         basal_trunks.push(TrunkSpec {
@@ -192,6 +267,10 @@ impl PathogenSpec {
             fallback_profile: Some("CM240".to_string()),
             display_alias: None,
             clonal_certified_label: None,
+            t_mrca: Some(1974.7),
+            t_mrca_ci: Some((1970.6, 1978.0)),
+            first_sampled_year: Some(1990.0),
+            chronaeon_half_life_yr: Some(6.93),
         });
 
         let landmarks = vec![
@@ -287,6 +366,8 @@ impl PathogenSpec {
             snapshot_date: "2026-11-16".to_string(),
             curation_sources: "LANL HIV Sequence Compendium 2023 (55 pure-subtype refs; 139 verified CRFs, 6 clonal-collapsed CRFs demoted) + NCBI GenBank clinical census (278,829 sequences; 38 novel circulating clusters)".to_string(),
             certification_criteria: "4-gate guarded caller: >=95% span coverage, binomial parent dominance (n_c - n_u >= 5), stem synapomorphies (net_stem >= 8, p <= 1e-4), and Kadane residual scan (< 80 nt / max S < 12)".to_string(),
+            default_temporal_slack_yr: Some(3.0),
+            chronaeon_half_life_yr: Some(6.93),
         }
     }
 
@@ -688,9 +769,16 @@ pub struct CompendiumEntry {
     pub descriptive_name: String,
     pub structural_formula: String,
     pub backbone: String,
+    #[serde(default)]
     pub t_mrca: Option<f64>,
+    #[serde(default)]
     pub t_mrca_ci_low: Option<f64>,
+    #[serde(default)]
     pub t_mrca_ci_high: Option<f64>,
+    #[serde(default)]
+    pub first_sampled_year: Option<f64>,
+    #[serde(default)]
+    pub chronaeon_half_life_yr: Option<f64>,
     pub hxb2_barcode: String,
     pub scope: String,
 }
@@ -749,6 +837,39 @@ impl Default for ScreeningConfig {
             p_fisher_thresh: 1e-4,
             mask_hypervariable_loops: true,
         }
+    }
+}
+
+/// Optional non-lookahead temporal donor admissibility configuration.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct TemporalGuardConfig {
+    /// Enable temporal masking of Tier-1 trunks and Tier-2 clades emerging after the query timestamp.
+    pub enabled: bool,
+    /// Explicit decimal query year override; when `None`, extracted from the FASTA header.
+    pub query_year: Option<f64>,
+    /// Lookahead tolerance in years (`None` uses `PathogenSpec::effective_temporal_slack_yr()`).
+    pub slack_yr: Option<f64>,
+}
+
+impl TemporalGuardConfig {
+    pub fn validate(&self) -> Result<(), String> {
+        if let Some(y) = self.query_year {
+            if !y.is_finite() || !(1900.0..=2100.0).contains(&y) {
+                return Err(format!(
+                    "query-year must be a finite year in [1900, 2100] (got {})",
+                    y
+                ));
+            }
+        }
+        if let Some(s) = self.slack_yr {
+            if !s.is_finite() || !(0.0..=50.0).contains(&s) {
+                return Err(format!(
+                    "temporal-slack-yr must be a finite value in [0, 50] (got {})",
+                    s
+                ));
+            }
+        }
+        Ok(())
     }
 }
 
@@ -827,6 +948,10 @@ pub struct SequenceResult {
     pub segments: Vec<SegmentCall>,
     pub breakpoints: Vec<BreakpointCall>,
     pub matches: Vec<LineageMatch>,
+    #[serde(default)]
+    pub query_year: Option<f64>,
+    #[serde(default)]
+    pub masked_future_trunks: Vec<String>,
 }
 
 /// Slot coverage metadata for a single RNA segment or genomic partition of a segmented isolate.
@@ -872,12 +997,16 @@ struct CertifiedLineage {
     clonal_stem: bool,
     dag_parent_indices: Vec<usize>,
     segments: Vec<(String, usize, usize)>,
+    segment_trunk_indices: Vec<usize>,
+    emergence_floor: Option<f64>,
     profile: Vec<i8>,
 }
 
 struct RivalProfile {
     label: String,
     profile: Vec<i8>,
+    emergence_floor: Option<f64>,
+    trunk_deps: Vec<usize>,
 }
 
 struct LineageCallDecision {
@@ -896,6 +1025,10 @@ pub struct EggmanEngine {
     pure_basal_count: usize,
     segment_id_by_ref_pos: Vec<u16>,
     pub trunk_names: Vec<String>,
+    /// Optional emergence floor `min(t_mrca_ci_low, t_mrca, first_sampled_year)` per trunk.
+    trunk_floors: Vec<Option<f64>>,
+    /// Lookup from trunk name or display alias -> index in `trunk_names`.
+    trunk_alias_map: HashMap<String, usize>,
     /// Trunks x coding sites (0=A, 1=C, 2=G, 3=T, -1=indel, -2=forbidden domain)
     trunk_mat: Vec<Vec<i8>>,
     /// Full reference-length profiles for each trunk + anchor ref + key founders for k-mer anchoring and banded alignment
@@ -917,6 +1050,8 @@ pub struct EggmanEngine {
     epi_names: Vec<String>,
     epi_mat: Vec<Vec<i8>>,
     epi_penalties: Vec<f64>,
+    epi_floors: Vec<Option<f64>>,
+    epi_trunk_deps: Vec<Vec<usize>>,
 }
 
 fn base_to_int(b: u8) -> i8 {
@@ -1135,6 +1270,7 @@ impl EggmanEngine {
         ordered_trunks.extend(spec.basal_trunks.iter().filter(|t| !t.is_pure_basal));
 
         let mut trunk_names = Vec::with_capacity(ordered_trunks.len());
+        let mut trunk_floors = Vec::with_capacity(ordered_trunks.len());
         let mut trunk_mat = Vec::with_capacity(ordered_trunks.len());
         let mut full_profiles_ref = Vec::new();
 
@@ -1157,6 +1293,7 @@ impl EggmanEngine {
                 }
             }
             trunk_names.push(t_spec.name.clone());
+            trunk_floors.push(t_spec.emergence_floor());
             trunk_mat.push(cod_arr);
         }
 
@@ -1232,11 +1369,13 @@ impl EggmanEngine {
             .iter()
             .map(|e| (e.label.as_str(), e))
             .collect();
-        let trunk_idx_map: HashMap<&str, usize> = trunk_names
-            .iter()
-            .enumerate()
-            .map(|(i, n)| (n.as_str(), i))
-            .collect();
+        let mut trunk_alias_map: HashMap<String, usize> = HashMap::new();
+        for (i, t_spec) in ordered_trunks.iter().enumerate() {
+            trunk_alias_map.insert(t_spec.name.clone(), i);
+            if let Some(ref alias) = t_spec.display_alias {
+                trunk_alias_map.entry(alias.clone()).or_insert(i);
+            }
+        }
 
         // Load Tier-2 Certified Lineages
         let mut certified_lineages = Vec::new();
@@ -1265,26 +1404,32 @@ impl EggmanEngine {
                     ));
                 }
 
-                let (backbone_idx, segments) = if let Some(entry) = comp_map.get(label.as_str()) {
-                    let bb_key = spec
-                        .basal_trunks
-                        .iter()
-                        .find(|t| {
-                            t.name == entry.backbone
-                                || t.display_alias.as_deref() == Some(entry.backbone.as_str())
-                        })
-                        .map(|t| t.name.as_str())
-                        .unwrap_or(entry.backbone.as_str());
-                    let b_idx = *trunk_idx_map.get(bb_key).unwrap_or(&0);
-                    (b_idx, parse_barcode_segments(&entry.hxb2_barcode))
+                let entry_opt = comp_map.get(label.as_str()).copied();
+                let (backbone_idx, segments, emergence_floor) = if let Some(entry) = entry_opt {
+                    let b_idx = *trunk_alias_map.get(&entry.backbone).unwrap_or(&0);
+                    let floor = min_temporal_floor(
+                        entry.t_mrca_ci_low,
+                        entry.t_mrca,
+                        entry.first_sampled_year,
+                    );
+                    (b_idx, parse_barcode_segments(&entry.hxb2_barcode), floor)
                 } else if !bundle.compendium.is_empty() {
                     return Err(format!(
                         "Certified lineage '{}' missing from compendium_json",
                         label
                     ));
                 } else {
-                    (0usize, Vec::new())
+                    (0usize, Vec::new(), None)
                 };
+
+                let mut segment_trunk_indices = vec![backbone_idx];
+                for (seg_trk, _, _) in &segments {
+                    if let Some(&ti) = trunk_alias_map.get(seg_trk.as_str()) {
+                        if !segment_trunk_indices.contains(&ti) {
+                            segment_trunk_indices.push(ti);
+                        }
+                    }
+                }
 
                 let global_stem = flags.split(',').any(|f| f == "global_stem");
                 let clonal_stem = flags.split(',').any(|f| f == "clonal_stem");
@@ -1303,6 +1448,8 @@ impl EggmanEngine {
                     clonal_stem,
                     dag_parent_indices: Vec::new(),
                     segments,
+                    segment_trunk_indices,
+                    emergence_floor,
                     profile: seq_cod,
                 });
             }
@@ -1321,19 +1468,54 @@ impl EggmanEngine {
             }
         }
 
+        let founder_meta = |fk: &str| -> (Option<f64>, Vec<usize>) {
+            if let Some(&ci) = cert_idx_map.get(fk) {
+                let c = &certified_lineages[ci];
+                return (c.emergence_floor, c.segment_trunk_indices.clone());
+            }
+            if let Some(entry) = comp_map.get(fk) {
+                let mut deps = Vec::new();
+                if let Some(&bi) = trunk_alias_map.get(&entry.backbone) {
+                    deps.push(bi);
+                }
+                for (seg_trk, _, _) in parse_barcode_segments(&entry.hxb2_barcode) {
+                    if let Some(&ti) = trunk_alias_map.get(seg_trk.as_str()) {
+                        if !deps.contains(&ti) {
+                            deps.push(ti);
+                        }
+                    }
+                }
+                let floor = min_temporal_floor(
+                    entry.t_mrca_ci_low,
+                    entry.t_mrca,
+                    entry.first_sampled_year,
+                );
+                return (floor, deps);
+            }
+            if let Some(&ti) = trunk_alias_map.get(fk) {
+                return (trunk_floors[ti], vec![ti]);
+            }
+            (None, Vec::new())
+        };
+
         // Build rival list for Guard 4 (basal trunks + founder lineages)
         let mut founder_rivals = Vec::new();
-        for (t_name, t_prof) in trunk_names.iter().zip(trunk_mat.iter()) {
+        for (i, (t_name, t_prof)) in trunk_names.iter().zip(trunk_mat.iter()).enumerate() {
             founder_rivals.push(RivalProfile {
                 label: t_name.clone(),
                 profile: t_prof.clone(),
+                emergence_floor: trunk_floors[i],
+                trunk_deps: vec![i],
             });
         }
         for (fk, _) in &spec.epi_founder_order {
             if let Some(fprof) = founder_profiles.get(fk) {
+                let (emergence_floor, trunk_deps) = founder_meta(fk);
                 founder_rivals.push(RivalProfile {
                     label: fk.clone(),
                     profile: fprof[(coding_start - 1)..coding_end].to_vec(),
+                    emergence_floor,
+                    trunk_deps,
                 });
             }
         }
@@ -1342,6 +1524,8 @@ impl EggmanEngine {
         let mut epi_names = Vec::new();
         let mut epi_mat = Vec::new();
         let mut epi_penalties = Vec::new();
+        let mut epi_floors = Vec::new();
+        let mut epi_trunk_deps = Vec::new();
         let mut replaced_founders: HashSet<String> = HashSet::new();
         for (i, t_name) in trunk_names.iter().enumerate().take(pure_basal_count) {
             if let Some((_, cert_key, disp_name)) = spec
@@ -1355,10 +1539,18 @@ impl EggmanEngine {
                     .map(|p| p[(coding_start - 1)..coding_end].to_vec())
                     .unwrap_or_else(|| trunk_mat[i].clone());
                 epi_mat.push(rep_prof);
+                let (c_floor, mut c_deps) = founder_meta(cert_key);
+                if !c_deps.contains(&i) {
+                    c_deps.push(i);
+                }
+                epi_floors.push(c_floor.or(trunk_floors[i]));
+                epi_trunk_deps.push(c_deps);
                 replaced_founders.insert(cert_key.clone());
             } else {
                 epi_names.push(t_name.clone());
                 epi_mat.push(trunk_mat[i].clone());
+                epi_floors.push(trunk_floors[i]);
+                epi_trunk_deps.push(vec![i]);
             }
             epi_penalties.push(0.0);
         }
@@ -1370,6 +1562,9 @@ impl EggmanEngine {
                 epi_names.push(disp_name.clone());
                 epi_mat.push(fprof[(coding_start - 1)..coding_end].to_vec());
                 epi_penalties.push(spec.epi_founder_penalty);
+                let (emergence_floor, trunk_deps) = founder_meta(fk);
+                epi_floors.push(emergence_floor);
+                epi_trunk_deps.push(trunk_deps);
             }
         }
 
@@ -1398,6 +1593,8 @@ impl EggmanEngine {
             pure_basal_count,
             segment_id_by_ref_pos,
             trunk_names,
+            trunk_floors,
+            trunk_alias_map,
             trunk_mat,
             full_profiles_ref,
             base_mask_ref,
@@ -1412,6 +1609,8 @@ impl EggmanEngine {
             epi_names,
             epi_mat,
             epi_penalties,
+            epi_floors,
+            epi_trunk_deps,
         })
     }
 
@@ -1619,6 +1818,22 @@ impl EggmanEngine {
         seg_mode: &str,
         cfg: &ScreeningConfig,
     ) -> (SegmentedAssemblyResult, Vec<SequenceResult>, String) {
+        self.classify_fasta_with_segmentation_temporal(
+            fasta_text,
+            seg_mode,
+            cfg,
+            &TemporalGuardConfig::default(),
+        )
+    }
+
+    /// Segmented FASTA ingestion and classification with optional non-lookahead temporal guarding.
+    pub fn classify_fasta_with_segmentation_temporal(
+        &self,
+        fasta_text: &str,
+        seg_mode: &str,
+        cfg: &ScreeningConfig,
+        temporal: &TemporalGuardConfig,
+    ) -> (SegmentedAssemblyResult, Vec<SequenceResult>, String) {
         let raw_records: Vec<(String, String)> = Self::parse_fasta(fasta_text)
             .into_iter()
             .filter_map(|(hdr, seq)| {
@@ -1652,7 +1867,7 @@ impl EggmanEngine {
             let mut isolates = Vec::with_capacity(raw_records.len());
             let mut out_fasta = String::new();
             for (hdr, seq) in &raw_records {
-                let res = self.classify_sequence(hdr, seq, cfg);
+                let res = self.classify_sequence_with_temporal(hdr, seq, cfg, temporal);
                 let cov_vec = self.compute_landmark_coverage_vec(seq);
                 let mut slots = Vec::with_capacity(n_lm);
                 let mut present_cnt = 0usize;
@@ -1835,7 +2050,7 @@ impl EggmanEngine {
 
         // 1. Pre-concatenated full records
         for (hdr, seq) in full_items {
-            let res = self.classify_sequence(&hdr, &seq, cfg);
+            let res = self.classify_sequence_with_temporal(&hdr, &seq, cfg, temporal);
             let cov_vec = self.compute_landmark_coverage_vec(&seq);
             let mut slots = Vec::with_capacity(n_lm);
             let mut present_cnt = 0usize;
@@ -1918,7 +2133,23 @@ impl EggmanEngine {
                 })
                 .collect();
 
-            let mut res = self.classify_sequence(&grp.isolate_id, &stitched_seq, cfg);
+            let eff_temporal = if temporal.enabled && temporal.query_year.is_none() {
+                let part_year = parse_header_decimal_year(&grp.isolate_id).or_else(|| {
+                    grp.parts
+                        .iter()
+                        .filter_map(|(_, h, _)| parse_header_decimal_year(h))
+                        .next()
+                });
+                TemporalGuardConfig {
+                    enabled: true,
+                    query_year: part_year,
+                    slack_yr: temporal.slack_yr,
+                }
+            } else {
+                temporal.clone()
+            };
+            let mut res =
+                self.classify_sequence_with_temporal(&grp.isolate_id, &stitched_seq, cfg, &eff_temporal);
             res.raw_length_nt = total_raw_nt;
             if grp.parts.len() > 1 {
                 res.alignment_mode = format!(
@@ -1977,7 +2208,7 @@ impl EggmanEngine {
 
         // 3. Any unmerged/single passthrough short records
         for (hdr, seq) in passthrough_short {
-            let res = self.classify_sequence(&hdr, &seq, cfg);
+            let res = self.classify_sequence_with_temporal(&hdr, &seq, cfg, temporal);
             let cov_vec = self.compute_landmark_coverage_vec(&seq);
             let mut slots = Vec::with_capacity(n_lm);
             let mut present_cnt = 0usize;
@@ -2583,6 +2814,106 @@ impl EggmanEngine {
         0
     }
 
+    /// Resolve admissible Tier-1 trunks for a query under `TemporalGuardConfig`.
+    /// Returns `(query_year, temporal_limit, allowed_trunks, masked_future_trunks)`.
+    fn resolve_temporal_mask(
+        &self,
+        header: &str,
+        temporal: &TemporalGuardConfig,
+    ) -> (Option<f64>, Option<f64>, Vec<bool>, Vec<String>) {
+        let k = self.trunk_names.len();
+        if !temporal.enabled {
+            return (None, None, vec![true; k], Vec::new());
+        }
+        let query_year = temporal
+            .query_year
+            .or_else(|| parse_header_decimal_year(header));
+        let Some(t_q) = query_year else {
+            return (None, None, vec![true; k], Vec::new());
+        };
+        let slack = temporal
+            .slack_yr
+            .unwrap_or_else(|| self.spec.effective_temporal_slack_yr());
+        let limit = t_q + slack;
+
+        let mut allowed: Vec<bool> = self
+            .trunk_floors
+            .iter()
+            .map(|fl| fl.is_none_or(|v| v <= limit))
+            .collect();
+
+        // Safety fallback: ensure at least min(2, k) trunks and >= 1 pure basal trunk remain active.
+        let min_keep = k.min(2);
+        let need_basal = self.pure_basal_count > 0
+            && !(0..self.pure_basal_count).any(|b| allowed[b]);
+
+        if need_basal {
+            if let Some((best_b, _)) = (0..self.pure_basal_count)
+                .map(|b| (b, self.trunk_floors[b].unwrap_or(f64::NEG_INFINITY)))
+                .min_by(|a, b| a.1.total_cmp(&b.1).then_with(|| a.0.cmp(&b.0)))
+            {
+                allowed[best_b] = true;
+            }
+        }
+
+        if allowed.iter().filter(|&&a| a).count() < min_keep {
+            let mut masked: Vec<usize> = (0..k).filter(|&i| !allowed[i]).collect();
+            masked.sort_by(|&a, &b| {
+                let pa = a < self.pure_basal_count;
+                let pb = b < self.pure_basal_count;
+                pb.cmp(&pa)
+                    .then_with(|| {
+                        self.trunk_floors[a]
+                            .unwrap_or(f64::INFINITY)
+                            .total_cmp(&self.trunk_floors[b].unwrap_or(f64::INFINITY))
+                    })
+                    .then_with(|| a.cmp(&b))
+            });
+            for idx in masked {
+                if allowed.iter().filter(|&&a| a).count() >= min_keep {
+                    break;
+                }
+                allowed[idx] = true;
+            }
+        }
+
+        let masked_future_trunks: Vec<String> = (0..k)
+            .filter(|&i| !allowed[i])
+            .map(|i| self.trunk_names[i].clone())
+            .collect();
+
+        (Some(t_q), Some(limit), allowed, masked_future_trunks)
+    }
+
+    fn is_compendium_entry_admissible(
+        &self,
+        entry: &CompendiumEntry,
+        allowed_trunks: &[bool],
+        temporal_limit: f64,
+    ) -> bool {
+        let floor = min_temporal_floor(
+            entry.t_mrca_ci_low,
+            entry.t_mrca,
+            entry.first_sampled_year,
+        );
+        if floor.is_some_and(|fl| fl > temporal_limit) {
+            return false;
+        }
+        if let Some(&bi) = self.trunk_alias_map.get(&entry.backbone) {
+            if !allowed_trunks.get(bi).copied().unwrap_or(true) {
+                return false;
+            }
+        }
+        for (seg_trk, _, _) in parse_barcode_segments(&entry.hxb2_barcode) {
+            if let Some(&ti) = self.trunk_alias_map.get(seg_trk.as_str()) {
+                if !allowed_trunks.get(ti).copied().unwrap_or(true) {
+                    return false;
+                }
+            }
+        }
+        true
+    }
+
     /// Screen a single sequence `(header, raw_seq)` and return its full `SequenceResult`.
     pub fn classify_sequence(
         &self,
@@ -2590,6 +2921,30 @@ impl EggmanEngine {
         raw_seq: &str,
         cfg: &ScreeningConfig,
     ) -> SequenceResult {
+        self.classify_sequence_with_temporal(
+            header,
+            raw_seq,
+            cfg,
+            &TemporalGuardConfig::default(),
+        )
+    }
+
+    /// Screen a single sequence `(header, raw_seq)` with optional non-lookahead temporal guarding.
+    pub fn classify_sequence_with_temporal(
+        &self,
+        header: &str,
+        raw_seq: &str,
+        cfg: &ScreeningConfig,
+        temporal: &TemporalGuardConfig,
+    ) -> SequenceResult {
+        let (query_year, temporal_limit, allowed_trunks, masked_future_trunks) =
+            self.resolve_temporal_mask(header, temporal);
+        let allowed_slice = if temporal.enabled && temporal_limit.is_some() {
+            Some(allowed_trunks.as_slice())
+        } else {
+            None
+        };
+
         let (mut q_coding, align_mode, raw_len) = self.project_to_hxb2_coding(raw_seq);
         let coding_len = self.spec.coding_len();
         let coding_start = self.spec.coding_start;
@@ -2652,6 +3007,8 @@ impl EggmanEngine {
                 segments: vec![],
                 breakpoints: vec![],
                 matches: vec![],
+                query_year,
+                masked_future_trunks,
             };
         }
 
@@ -2679,6 +3036,7 @@ impl EggmanEngine {
         let col_to_hxb2: Vec<usize> = (h_start..=h_end).collect();
 
         let (segs, bps) = self.run_paff_viterbi(
+            allowed_slice,
             q_sub,
             first_idx,
             &col_to_hxb2,
@@ -2714,7 +3072,14 @@ impl EggmanEngine {
         let mut constituent_trunks: Vec<String> = constituent_set.into_iter().collect();
         constituent_trunks.sort();
 
-        let mut matches = self.match_compendium(&struct_formula, &segs, &bps, &locus_scope);
+        let mut matches = self.match_compendium(
+            &struct_formula,
+            &segs,
+            &bps,
+            &locus_scope,
+            allowed_slice,
+            temporal_limit,
+        );
         let decision = self.call_certified_lineage(
             &q_coding,
             h_start,
@@ -2723,6 +3088,8 @@ impl EggmanEngine {
             &segs,
             &bps,
             cfg,
+            allowed_slice,
+            temporal_limit,
         );
         if let Some(comp_label) = &decision.certified_compendium_label {
             self.prepend_certified_match(&mut matches, comp_label, &decision.call_support);
@@ -2739,6 +3106,8 @@ impl EggmanEngine {
                 &col_to_hxb2,
                 &segs,
                 cfg,
+                allowed_slice,
+                temporal_limit,
             );
 
         let basal_formula = desc_name.clone();
@@ -2772,12 +3141,15 @@ impl EggmanEngine {
             segments: segs,
             breakpoints: bps,
             matches,
+            query_year,
+            masked_future_trunks,
         }
     }
 
     #[allow(clippy::too_many_arguments)]
     fn run_paff_viterbi(
         &self,
+        allowed_trunks: Option<&[bool]>,
         q_sub: &[i8],
         offset_in_coding: usize,
         col_to_hxb2: &[usize],
@@ -2796,11 +3168,17 @@ impl EggmanEngine {
             .map(|t| t.penalty)
             .collect();
         basal_penalties.resize(self.trunk_names.len(), 0.0);
+        let allow_ghost = self.spec.ghost_relabel_rule.as_ref().is_none_or(|rule| {
+            self.trunk_alias_map.get(&rule.ghost_trunk).is_none_or(|&idx| {
+                allowed_trunks.is_none_or(|m| m.get(idx).copied().unwrap_or(true))
+            })
+        });
         self.run_paff_viterbi_panel(
             &self.trunk_names,
             &self.trunk_mat,
             &basal_penalties,
-            true,
+            allowed_trunks,
+            allow_ghost,
             q_sub,
             offset_in_coding,
             col_to_hxb2,
@@ -2815,9 +3193,10 @@ impl EggmanEngine {
     #[allow(clippy::too_many_arguments)]
     fn run_paff_viterbi_panel(
         &self,
-        names: &[String],
-        mat: &[Vec<i8>],
-        penalties: &[f64],
+        raw_names: &[String],
+        raw_mat: &[Vec<i8>],
+        raw_penalties: &[f64],
+        allowed: Option<&[bool]>,
         allow_ghost_e_relabel: bool,
         q_sub: &[i8],
         offset_in_coding: usize,
@@ -2828,6 +3207,35 @@ impl EggmanEngine {
         min_informative_snps: usize,
         p_fisher_thresh: f64,
     ) -> (Vec<SegmentCall>, Vec<BreakpointCall>) {
+        let (names, mat, penalties): (Vec<&str>, Vec<&[i8]>, Vec<f64>) = match allowed {
+            Some(mask) if mask.iter().any(|&a| !a) => {
+                let mut ns = Vec::with_capacity(raw_names.len());
+                let mut ms = Vec::with_capacity(raw_names.len());
+                let mut ps = Vec::with_capacity(raw_names.len());
+                for i in 0..raw_names.len() {
+                    if mask.get(i).copied().unwrap_or(true) {
+                        ns.push(raw_names[i].as_str());
+                        ms.push(raw_mat[i].as_slice());
+                        ps.push(raw_penalties[i]);
+                    }
+                }
+                if ms.is_empty() {
+                    (
+                        raw_names.iter().map(|s| s.as_str()).collect(),
+                        raw_mat.iter().map(|v| v.as_slice()).collect(),
+                        raw_penalties.to_vec(),
+                    )
+                } else {
+                    (ns, ms, ps)
+                }
+            }
+            _ => (
+                raw_names.iter().map(|s| s.as_str()).collect(),
+                raw_mat.iter().map(|v| v.as_slice()).collect(),
+                raw_penalties.to_vec(),
+            ),
+        };
+
         let k_trunks = names.len();
         let k_total = k_trunks + 1;
         let ghost_idx = k_trunks;
@@ -2969,7 +3377,7 @@ impl EggmanEngine {
                 };
 
                 let (pval, n11, _n12, _n21, n22, _, _) = self.test_boundary_significance_for(
-                    mat,
+                    &mat,
                     q_sub,
                     offset_in_coding,
                     ghost_idx,
@@ -3005,10 +3413,18 @@ impl EggmanEngine {
                 let span1 = (col_to_hxb2[e1 - 1] + 1).saturating_sub(col_to_hxb2[s1]);
                 let span2 = (col_to_hxb2[e2 - 1] + 1).saturating_sub(col_to_hxb2[s2]);
 
-                let valid1 =
-                    Self::trunk_valid_fraction_for(mat, t1, offset_in_coding + s1, offset_in_coding + e2);
-                let valid2 =
-                    Self::trunk_valid_fraction_for(mat, t2, offset_in_coding + s1, offset_in_coding + e2);
+                let valid1 = Self::trunk_valid_fraction_for(
+                    &mat,
+                    t1,
+                    offset_in_coding + s1,
+                    offset_in_coding + e2,
+                );
+                let valid2 = Self::trunk_valid_fraction_for(
+                    &mat,
+                    t2,
+                    offset_in_coding + s1,
+                    offset_in_coding + e2,
+                );
 
                 let keep_t = if valid1 < 0.7 && valid2 >= 0.7 {
                     t2
@@ -3041,7 +3457,7 @@ impl EggmanEngine {
         // (e.g. trunk ?E next to a ghost segment relabelled ?E).
         let label_of = |s: usize, e: usize, t: usize| -> String {
             if t < k_trunks {
-                return names[t].clone();
+                return names[t].to_string();
             }
             if allow_ghost_e_relabel {
                 if let Some(ref rule) = self.spec.ghost_relabel_rule {
@@ -3095,7 +3511,7 @@ impl EggmanEngine {
             let (_s2, e2, t2, _, _, _) = merged[i + 1];
             let (pval, n11, n12, n21, n22, ci_low_col, ci_high_col) = self
                 .test_boundary_significance_for(
-                    mat,
+                    &mat,
                     q_sub,
                     offset_in_coding,
                     ghost_idx,
@@ -3141,8 +3557,8 @@ impl EggmanEngine {
             // Compute identity % against assigned trunk
             let mut id_valid = 0usize;
             let mut id_match = 0usize;
-            let t_check = if t < k_trunks && !mixed {
-                Some(&mat[t])
+            let t_check: Option<&[i8]> = if t < k_trunks && !mixed {
+                Some(mat[t])
             } else if allow_ghost_e_relabel
                 && self
                     .spec
@@ -3152,7 +3568,7 @@ impl EggmanEngine {
                     .unwrap_or(false)
                 && !self.ghost_donor_coding.is_empty()
             {
-                Some(&self.ghost_donor_coding)
+                Some(self.ghost_donor_coding.as_slice())
             } else {
                 None
             };
@@ -3214,7 +3630,7 @@ impl EggmanEngine {
     }
 
     fn trunk_valid_fraction_for(
-        mat: &[Vec<i8>],
+        mat: &[&[i8]],
         t_idx: usize,
         cod_start: usize,
         cod_end: usize,
@@ -3230,7 +3646,7 @@ impl EggmanEngine {
     #[allow(clippy::too_many_arguments)]
     fn test_boundary_significance_for(
         &self,
-        mat: &[Vec<i8>],
+        mat: &[&[i8]],
         q_sub: &[i8],
         offset: usize,
         ghost_idx: usize,
@@ -3421,6 +3837,7 @@ impl EggmanEngine {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     fn kadane_rival_scan(
         &self,
         q_coding: &[i8],
@@ -3429,6 +3846,8 @@ impl EggmanEngine {
         skip_labels: &[&str],
         min_stem: i32,
         p_thresh: f64,
+        allowed_trunks: Option<&[bool]>,
+        temporal_limit: Option<f64>,
     ) -> Option<(String, usize, usize, i32, f64)> {
         let coding_len = self.spec.coding_len();
         let coding_start = self.spec.coding_start;
@@ -3438,6 +3857,20 @@ impl EggmanEngine {
         for rival in rivals {
             if skip_labels.iter().any(|&s| s == rival.label) {
                 continue;
+            }
+            if let Some(lim) = temporal_limit {
+                if rival.emergence_floor.is_some_and(|fl| fl > lim) {
+                    continue;
+                }
+            }
+            if let Some(allowed) = allowed_trunks {
+                if rival
+                    .trunk_deps
+                    .iter()
+                    .any(|&ti| !allowed.get(ti).copied().unwrap_or(true))
+                {
+                    continue;
+                }
             }
             let mut cur = 0i32;
             let mut cur_start = 0usize;
@@ -3527,17 +3960,24 @@ impl EggmanEngine {
         basal_segs: &[SegmentCall],
         basal_bps: &[BreakpointCall],
         cfg: &ScreeningConfig,
+        allowed_trunks: Option<&[bool]>,
+        temporal_limit: Option<f64>,
     ) -> LineageCallDecision {
         let coding_len = self.spec.coding_len();
         let coding_start = self.spec.coding_start;
 
-        // 1. Best pure basal trunk strictly across 0..pure_basal_count (never domain-restricted ghosts)
-        let mut best_basal_idx = 0usize;
+        // 1. Best pure basal trunk strictly across admissible 0..pure_basal_count (never domain-restricted ghosts)
+        let mut best_basal_idx = (0..self.pure_basal_count)
+            .find(|&b| allowed_trunks.is_none_or(|m| m.get(b).copied().unwrap_or(true)))
+            .unwrap_or(0);
         let mut best_basal_id = -1.0f64;
         let mut best_basal_matched = 0usize;
         let mut best_basal_compared = 0usize;
         let mut basal_ids = vec![(-1.0f64, 0usize); self.pure_basal_count];
         for b in 0..self.pure_basal_count {
+            if allowed_trunks.is_some_and(|m| !m.get(b).copied().unwrap_or(true)) {
+                continue;
+            }
             let mut matched = 0usize;
             let mut compared = 0usize;
             for (&qb, &rb) in q_coding.iter().zip(self.trunk_mat[b].iter()) {
@@ -3570,8 +4010,30 @@ impl EggmanEngine {
             p_stem: f64,
         }
 
+        let is_cand_admissible = |cand: &CertifiedLineage| -> bool {
+            if let Some(lim) = temporal_limit {
+                if cand.emergence_floor.is_some_and(|fl| fl > lim) {
+                    return false;
+                }
+            }
+            if let Some(allowed) = allowed_trunks {
+                if !allowed.get(cand.backbone_idx).copied().unwrap_or(true)
+                    || cand
+                        .segment_trunk_indices
+                        .iter()
+                        .any(|&ti| !allowed.get(ti).copied().unwrap_or(true))
+                {
+                    return false;
+                }
+            }
+            true
+        };
+
         let mut survivors: Vec<SurvivingCand<'_>> = Vec::new();
         for cand in &self.certified_lineages {
+            if !is_cand_admissible(cand) {
+                continue;
+            }
             // If a certified clonal descendant corresponds to a basal trunk (e.g., Subtype_G <-> G0),
             // test its stem against the closest non-self pure basal trunk.
             let is_clonal_alias = self
@@ -3582,7 +4044,11 @@ impl EggmanEngine {
             let stem_ref_idx = if is_clonal_alias {
                 basal_ids
                     .iter()
-                    .filter(|&&(_, b)| self.trunk_names[b] != best_basal_name)
+                    .filter(|&&(id, b)| {
+                        id >= 0.0
+                            && self.trunk_names[b] != best_basal_name
+                            && allowed_trunks.is_none_or(|m| m.get(b).copied().unwrap_or(true))
+                    })
                     .max_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal))
                     .map(|&(_, b)| b)
                     .unwrap_or(best_basal_idx)
@@ -3737,7 +4203,7 @@ impl EggmanEngine {
                     // derived/novel CRF over an established global_stem founder with the same covered trunk composition
                     if covered_segs < cand.segments.len() {
                         let shadowed_by_founder = self.certified_lineages.iter().any(|gs| {
-                            if !gs.global_stem || gs.label == cand.label {
+                            if !gs.global_stem || gs.label == cand.label || !is_cand_admissible(gs) {
                                 return false;
                             }
                             let mut gs_trunks: HashSet<&str> = HashSet::new();
@@ -3850,6 +4316,8 @@ impl EggmanEngine {
                 &skip_vec,
                 min_stem_g4,
                 1e-4,
+                allowed_trunks,
+                temporal_limit,
             ) {
                 let disp_base = self.spec.display_lineage_name(&best.cand.label);
                 let disp_rival = self.spec.display_lineage_name(&rival_lbl);
@@ -3968,6 +4436,8 @@ impl EggmanEngine {
             &skip_vec,
             min_stem_g4,
             1e-4,
+            allowed_trunks,
+            temporal_limit,
         ) {
             let disp_base = self.spec.display_lineage_name(only_trunk);
             let disp_rival = self.spec.display_lineage_name(&rival_lbl);
@@ -4050,6 +4520,8 @@ impl EggmanEngine {
         col_to_hxb2: &[usize],
         basal_segs: &[SegmentCall],
         cfg: &ScreeningConfig,
+        allowed_trunks: Option<&[bool]>,
+        temporal_limit: Option<f64>,
     ) -> (String, String, Vec<SegmentCall>) {
         let scope_suffix = if locus_scope == "full" {
             String::new()
@@ -4074,7 +4546,35 @@ impl EggmanEngine {
             return (formula, barcode, segs);
         }
 
-        // URF: run epidemiological Viterbi segmentation
+        // URF: run epidemiological Viterbi segmentation (respecting temporal admissibility)
+        let epi_allowed: Option<Vec<bool>> = if allowed_trunks.is_some() || temporal_limit.is_some() {
+            let mut mask: Vec<bool> = (0..self.epi_names.len())
+                .map(|i| {
+                    let time_ok = temporal_limit
+                        .is_none_or(|lim| self.epi_floors[i].is_none_or(|fl| fl <= lim));
+                    let trunk_ok = allowed_trunks.is_none_or(|m| {
+                        self.epi_trunk_deps[i]
+                            .iter()
+                            .all(|&ti| m.get(ti).copied().unwrap_or(true))
+                    });
+                    time_ok && trunk_ok
+                })
+                .collect();
+            if mask.iter().filter(|&&a| a).count() < self.epi_names.len().min(2) {
+                for (i, slot) in mask.iter_mut().enumerate() {
+                    if self.epi_trunk_deps[i]
+                        .iter()
+                        .all(|&ti| allowed_trunks.is_none_or(|m| m.get(ti).copied().unwrap_or(true)))
+                    {
+                        *slot = true;
+                    }
+                }
+            }
+            Some(mask)
+        } else {
+            None
+        };
+
         let gamma = cfg.gamma.unwrap_or(7.0);
         let min_span_nt = cfg.min_span_nt.unwrap_or(if locus_scope == "full" {
             120
@@ -4086,6 +4586,7 @@ impl EggmanEngine {
             &self.epi_names,
             &self.epi_mat,
             &self.epi_penalties,
+            epi_allowed.as_deref(),
             false,
             q_sub,
             first_idx,
@@ -4103,6 +4604,7 @@ impl EggmanEngine {
                 &self.epi_names,
                 &self.epi_mat,
                 &self.epi_penalties,
+                epi_allowed.as_deref(),
                 false,
                 q_sub,
                 first_idx,
@@ -4190,14 +4692,29 @@ impl EggmanEngine {
         segs: &[SegmentCall],
         bps: &[BreakpointCall],
         locus_scope: &str,
+        allowed_trunks: Option<&[bool]>,
+        temporal_limit: Option<f64>,
     ) -> Vec<LineageMatch> {
         let mut matches = Vec::new();
         let base_formula = struct_formula.split('@').next().unwrap_or(struct_formula);
+        let entry_ok = |entry: &CompendiumEntry| -> bool {
+            if let Some(lim) = temporal_limit {
+                if !self.is_compendium_entry_admissible(entry, allowed_trunks.unwrap_or(&[]), lim) {
+                    return false;
+                }
+            } else if let Some(allowed) = allowed_trunks {
+                if !self.is_compendium_entry_admissible(entry, allowed, f64::INFINITY) {
+                    return false;
+                }
+            }
+            true
+        };
 
         // 1. Exact structural formula matches
         for entry in &self.compendium {
             if entry.category == "Demoted_LANL_Entry"
                 || entry.status.starts_with("Collapsed_to_Clonal_Trunk")
+                || !entry_ok(entry)
             {
                 continue;
             }
@@ -4232,6 +4749,7 @@ impl EggmanEngine {
             for entry in &self.compendium {
                 if entry.category == "Demoted_LANL_Entry"
                     || entry.status.starts_with("Collapsed_to_Clonal_Trunk")
+                    || !entry_ok(entry)
                 {
                     continue;
                 }
@@ -4658,6 +5176,10 @@ mod pathogen_pack_tests {
             fallback_profile: None,
             display_alias: None,
             clonal_certified_label: None,
+            t_mrca: None,
+            t_mrca_ci: None,
+            first_sampled_year: None,
+            chronaeon_half_life_yr: None,
         }
     }
 
@@ -4780,6 +5302,8 @@ mod pathogen_pack_tests {
             snapshot_date: "2026-11-16".to_string(),
             curation_sources: String::new(),
             certification_criteria: String::new(),
+            default_temporal_slack_yr: None,
+            chronaeon_half_life_yr: None,
         };
 
         let anc = deterministic_dna(total_len, 0xCAFE_BABE_1234_5678);
@@ -4918,6 +5442,8 @@ mod pathogen_pack_tests {
             snapshot_date: "2026-11-16".to_string(),
             curation_sources: String::new(),
             certification_criteria: String::new(),
+            default_temporal_slack_yr: None,
+            chronaeon_half_life_yr: None,
         };
 
         let anc = deterministic_dna(REF_LEN, 0x5A25_C0F2_2022_0001);
@@ -4964,6 +5490,8 @@ mod pathogen_pack_tests {
             t_mrca: None,
             t_mrca_ci_low: None,
             t_mrca_ci_high: None,
+            first_sampled_year: None,
+            chronaeon_half_life_yr: None,
             hxb2_barcode: "BA.2:266-21562|BJ.1:21563-25384|BA.2:25385-29674".to_string(),
             scope: "full".to_string(),
         }];
@@ -5053,17 +5581,23 @@ mod pathogen_pack_tests {
         let sarbeco = EggmanEngine::from_builtin_id("sarbeco").expect("embedded sarbeco");
         assert_eq!(sarbeco.basal_trunk_count(), 5);
 
-        // Construct B3.13 (EA1 on PA, HA, NA, MP; NAm_B313 on PB2, PB1, NP, NS)
-        // and split into 8 out-of-order FASTA records with 5'/3' UTR overhangs
+        // Extract circulating B3.13 profile from IAV_CERTIFIED_TSV and split into 8 out-of-order FASTA
+        // records with 5'/3' UTR overhangs; also verify raw ChronAeon Tier-1 splice recovers exact
+        // Tier-1 coordinates while Guard-4 blocks certifying a stemless 2021-EA1 chimera.
         let profs = parse_aligned_fasta_profiles(IAV_PROFILES_FASTA, iav.spec().ref_full_len)
             .expect("iav profiles");
         let ea1 = &profs["EA1"];
         let nam = &profs["NAm_B313"];
-        let mut b313_genome = nam.clone();
+        let b313_line = IAV_CERTIFIED_TSV
+            .lines()
+            .find(|l| l.starts_with("B3.13\t"))
+            .expect("B3.13 certified row");
+        let b313_str = b313_line.split('\t').nth(5).expect("B3.13 seq column");
+        let mut stemless_splice = nam.clone();
         for &lm_idx in &[2usize, 3, 5, 6] {
             let lm = &iav.spec().landmarks[lm_idx];
             for p in (lm.start - 1)..lm.end {
-                b313_genome[p] = ea1[p];
+                stemless_splice[p] = ea1[p];
             }
         }
         let to_dna = |slice: &[i8]| -> String {
@@ -5078,16 +5612,24 @@ mod pathogen_pack_tests {
                 })
                 .collect()
         };
+        let res_stemless = iav.classify_sequence(
+            "Stemless_Tier1_Splice",
+            &to_dna(&stemless_splice),
+            &ScreeningConfig::default(),
+        );
+        assert_eq!(res_stemless.called_lineage, "URF");
+        assert_eq!(res_stemless.structural_formula, "NAm_B313[EA1:PA+HA+NA+MP]");
+
         let order = [7usize, 3, 0, 5, 2, 6, 1, 4];
         let mut multi_fasta = String::new();
         for &idx in &order {
             let lm = &iav.spec().landmarks[idx];
-            let seg_seq = to_dna(&b313_genome[(lm.start - 1)..lm.end]);
+            let seg_seq = &b313_str[(lm.start - 1)..lm.end];
             // Add realistic 5' UTR & 3' poly-U tail on HA & NA
             let padded = if idx == 3 || idx == 5 {
                 format!("AGCAAAAGCAGGGG{}{}", seg_seq, "AACCCCTTTTT")
             } else {
-                seg_seq
+                seg_seq.to_string()
             };
             multi_fasta.push_str(&format!(
                 ">PP7551{:02}.1 Influenza A virus (A/dairy cow/Texas/24-008749-001/2024(H5N1)) segment {} ({}) complete cds\n{}\n",
@@ -5114,7 +5656,7 @@ mod pathogen_pack_tests {
             bare_8.push_str(&format!(
                 ">ACC_00{}\n{}\n",
                 idx + 1,
-                to_dna(&b313_genome[(lm.start - 1)..lm.end])
+                &b313_str[(lm.start - 1)..lm.end]
             ));
         }
         let (asm_bare, res_bare, _) =
@@ -5125,7 +5667,7 @@ mod pathogen_pack_tests {
         let ha_lm = &iav.spec().landmarks[3];
         let dup_ha = format!(
             ">ISO_ONE\n{}\n>ISO_TWO\n{}\n",
-            to_dna(&b313_genome[(ha_lm.start - 1)..ha_lm.end]),
+            &b313_str[(ha_lm.start - 1)..ha_lm.end],
             to_dna(&ea1[(ha_lm.start - 1)..ha_lm.end])
         );
         let (asm_ha, _, _) =
@@ -5133,6 +5675,467 @@ mod pathogen_pack_tests {
         assert_eq!(asm_ha.isolate_count, 2);
         assert!(!asm_ha.was_multi_record_assembled);
     }
+
+    #[test]
+    fn trunk_spec_temporal_fields_backward_compat() {
+        let legacy_trunk_json = r#"{"name": "B.1.1.7"}"#;
+        let t: TrunkSpec = serde_json::from_str(legacy_trunk_json).unwrap();
+        assert_eq!(t.name, "B.1.1.7");
+        assert!(t.is_pure_basal);
+        assert!(t.t_mrca.is_none());
+        assert!(t.t_mrca_ci.is_none());
+        assert!(t.first_sampled_year.is_none());
+        assert!(t.chronaeon_half_life_yr.is_none());
+        assert!(t.emergence_floor().is_none());
+
+        let timed_json = r#"{
+            "name": "LF.7",
+            "t_mrca": 2024.55,
+            "t_mrca_ci": [2024.42, 2024.68],
+            "first_sampled_year": 2024.49,
+            "chronaeon_half_life_yr": 0.25
+        }"#;
+        let t2: TrunkSpec = serde_json::from_str(timed_json).unwrap();
+        assert_eq!(t2.t_mrca, Some(2024.55));
+        assert_eq!(t2.t_mrca_ci, Some((2024.42, 2024.68)));
+        assert_eq!(t2.first_sampled_year, Some(2024.49));
+        assert_eq!(t2.chronaeon_half_life_yr, Some(0.25));
+        assert!((t2.emergence_floor().unwrap() - 2024.42).abs() < 1e-9);
+
+        let rt = serde_json::to_string(&t2).unwrap();
+        let t3: TrunkSpec = serde_json::from_str(&rt).unwrap();
+        assert_eq!(t3.emergence_floor(), t2.emergence_floor());
+
+        assert_eq!(PathogenSpec::hiv1_group_m_default().effective_temporal_slack_yr(), 3.0);
+        assert!(
+            PathogenSpec::hiv1_group_m_default()
+                .basal_trunks
+                .iter()
+                .all(|tr| tr.emergence_floor().is_some())
+        );
+    }
+
+    #[test]
+    fn header_decimal_year_parsing() {
+        let y1 = parse_header_decimal_year("hCoV-19/USA/WA-1|2024-03-15|EPI_ISL_1").unwrap();
+        assert!((y1 - 2024.202186).abs() < 1e-4, "got {}", y1);
+
+        let y2 = parse_header_decimal_year("isolate/2022-11-01/spike").unwrap();
+        assert!((y2 - 2022.832877).abs() < 1e-4, "got {}", y2);
+
+        let y3 = parse_header_decimal_year("sc2|2021.45|BA.1").unwrap();
+        assert!((y3 - 2021.45).abs() < 1e-9, "got {}", y3);
+
+        let y4 = parse_header_decimal_year("sample_2023-07").unwrap();
+        assert!((y4 - 2023.534247).abs() < 1e-4, "got {}", y4);
+
+        let y5 = parse_header_decimal_year("clade_B|2023|ref").unwrap();
+        assert!((2023.0..2024.0).contains(&y5), "got {}", y5);
+
+        let y6 = parse_header_decimal_year("A/dairy cow/Texas/24-008749-001/2024(H5N1)").unwrap();
+        assert!((2024.0..2025.0).contains(&y6), "got {}", y6);
+
+        let y7 = parse_header_decimal_year("sample|2024-XX-XX|raw").unwrap();
+        assert!((2024.0..2025.0).contains(&y7), "got {}", y7);
+
+        // False-positive guards: taxids, accessions, strain serial numbers
+        assert!(parse_header_decimal_year("2697049.2956128|PP755589.1|SRR20241234").is_none());
+        assert!(parse_header_decimal_year("TX/2024-008749_sample").is_none());
+    }
+
+    #[test]
+    fn temporal_guard_masks_future_sc2_donors_and_clades() {
+        const REF_LEN: usize = 29_903;
+        const COD_START: usize = 266;
+        const COD_END: usize = 29_674;
+        const COD_LEN: usize = COD_END - COD_START + 1;
+
+        let timed_trunk = |name: &str, t_mrca: f64, lo: f64, first: f64| TrunkSpec {
+            name: name.to_string(),
+            is_pure_basal: true,
+            penalty: 0.0,
+            active_range: None,
+            fallback_profile: None,
+            display_alias: None,
+            clonal_certified_label: None,
+            t_mrca: Some(t_mrca),
+            t_mrca_ci: Some((lo, t_mrca + 0.08)),
+            first_sampled_year: Some(first),
+            chronaeon_half_life_yr: Some(0.25),
+        };
+
+        let spec = PathogenSpec {
+            pathogen_name: "SARS-CoV-2".to_string(),
+            reference_name: "MN908947".to_string(),
+            ref_full_len: REF_LEN,
+            coding_start: COD_START,
+            coding_end: COD_END,
+            max_query_len: 35_000,
+            min_mapped_coding_nt: 3_000,
+            full_span_min_nt: 24_000,
+            full_mapped_min_nt: 20_000,
+            is_segmented: false,
+            forbid_intra_segment_recomb: false,
+            use_hiv1_legacy_gene_mapper: false,
+            hypervariable_masks: Vec::new(),
+            landmarks: vec![
+                GeneLandmark { short_name: "ORF1ab".into(), parent_gene: None, parent_min_span: 0, start: 266, end: 21555 },
+                GeneLandmark { short_name: "S".into(), parent_gene: None, parent_min_span: 0, start: 21563, end: 25384 },
+                GeneLandmark { short_name: "3'-end".into(), parent_gene: None, parent_min_span: 0, start: 25385, end: 29674 },
+            ],
+            locus_scopes: vec![LocusScopeRule {
+                name: "S".into(),
+                min_start: 21_500,
+                min_end: 0,
+                max_end: 25_600,
+                min_span_nt: 2_500,
+            }],
+            basal_trunks: vec![
+                timed_trunk("BA.1", 2021.75, 2021.70, 2021.78),
+                timed_trunk("BA.2", 2021.85, 2021.80, 2021.88),
+                timed_trunk("BA.5", 2022.15, 2022.10, 2022.18),
+                timed_trunk("KS.1.1", 2024.30, 2024.25, 2024.32),
+                timed_trunk("LF.7", 2024.50, 2024.45, 2024.52),
+                timed_trunk("LP.8.1", 2024.85, 2024.80, 2024.88),
+            ],
+            ghost_relabel_rule: None,
+            align_founder_keys: Vec::new(),
+            epi_founder_order: Vec::new(),
+            epi_founder_penalty: 0.005,
+            epi_certified_replacements: Vec::new(),
+            pack_version: "test-temporal".to_string(),
+            snapshot_date: "2026-11-17".to_string(),
+            curation_sources: String::new(),
+            certification_criteria: String::new(),
+            default_temporal_slack_yr: Some(0.5),
+            chronaeon_half_life_yr: Some(0.25),
+        };
+
+        let anc = deterministic_dna(REF_LEN, 0x2021_2025_5C02_0001);
+        let ba1 = mutate_periodic(&anc, 24, 0, 1);
+        let ba2 = mutate_periodic(&anc, 24, 4, 2);
+        let ba5 = mutate_periodic(&anc, 24, 8, 3);
+        let ks11 = mutate_periodic(&anc, 24, 12, 1);
+        let lf7 = mutate_periodic(&anc, 24, 16, 2);
+        let lp81 = mutate_periodic(&anc, 24, 20, 3);
+
+        // Future Tier-2 recombinant clade XEC (2024.55) derived from KS.1.1 + LF.7,
+        // PLUS a BA.1+BA.2 synthetic mosaic X_FUTURE whose parents are 2021 but clade itself emerged in 2024.6.
+        let mut xec_full = ks11.clone();
+        xec_full[(21563 - 1)..25384].copy_from_slice(&lf7[(21563 - 1)..25384]);
+        for k in 0..25usize {
+            let pos = COD_START + 250 + k * 900;
+            if pos < COD_END && pos % 24 >= 22 {
+                xec_full[pos] = if xec_full[pos] == b'A' { b'G' } else { b'A' };
+            }
+        }
+        let mut xfut_full = ba1.clone();
+        xfut_full[(21563 - 1)..25384].copy_from_slice(&ba2[(21563 - 1)..25384]);
+        for k in 0..25usize {
+            let pos = COD_START + 300 + k * 900;
+            if pos < COD_END && pos % 24 >= 22 {
+                xfut_full[pos] = if xfut_full[pos] == b'C' { b'T' } else { b'C' };
+            }
+        }
+
+        let xec_cod = std::str::from_utf8(&xec_full[(COD_START - 1)..COD_END]).unwrap();
+        let xfut_cod = std::str::from_utf8(&xfut_full[(COD_START - 1)..COD_END]).unwrap();
+        assert_eq!(xec_cod.len(), COD_LEN);
+
+        let profiles_fasta = format!(
+            ">BA.1\n{}\n>BA.2\n{}\n>BA.5\n{}\n>KS.1.1\n{}\n>LF.7\n{}\n>LP.8.1\n{}\n",
+            String::from_utf8_lossy(&ba1),
+            String::from_utf8_lossy(&ba2),
+            String::from_utf8_lossy(&ba5),
+            String::from_utf8_lossy(&ks11),
+            String::from_utf8_lossy(&lf7),
+            String::from_utf8_lossy(&lp81),
+        );
+        let certified_tsv = format!(
+            "# label\tcategory\tflags\tdag_parents\tn_seqs\tseq\nXEC\tCRF\tglobal_stem\t-\t50\t{}\nX_FUTURE\tCRF\tglobal_stem\t-\t50\t{}\n",
+            xec_cod, xfut_cod
+        );
+        let compendium_entries = vec![
+            CompendiumEntry {
+                label: "XEC".to_string(),
+                short_code: "XEC".to_string(),
+                category: "CRF".to_string(),
+                status: "Certified".to_string(),
+                descriptive_name: "KS.1.1[LF.7:S]".to_string(),
+                structural_formula: "KS.1.1[LF.7:S]".to_string(),
+                backbone: "KS.1.1".to_string(),
+                t_mrca: Some(2024.55),
+                t_mrca_ci_low: Some(2024.50),
+                t_mrca_ci_high: Some(2024.62),
+                first_sampled_year: Some(2024.58),
+                chronaeon_half_life_yr: Some(0.25),
+                hxb2_barcode: "KS.1.1:266-21562|LF.7:21563-25384|KS.1.1:25385-29674".to_string(),
+                scope: "full".to_string(),
+            },
+            CompendiumEntry {
+                label: "X_FUTURE".to_string(),
+                short_code: "X_FUTURE".to_string(),
+                category: "CRF".to_string(),
+                status: "Certified".to_string(),
+                descriptive_name: "BA.1[BA.2:S]".to_string(),
+                structural_formula: "BA.1[BA.2:S]".to_string(),
+                backbone: "BA.1".to_string(),
+                t_mrca: Some(2024.60),
+                t_mrca_ci_low: Some(2024.55),
+                t_mrca_ci_high: Some(2024.70),
+                first_sampled_year: Some(2024.62),
+                chronaeon_half_life_yr: Some(0.25),
+                hxb2_barcode: "BA.1:266-21562|BA.2:21563-25384|BA.1:25385-29674".to_string(),
+                scope: "full".to_string(),
+            },
+        ];
+
+        let dir = temp_pack_dir("sc2_temporal");
+        std::fs::write(dir.join("manifest.json"), serde_json::to_string_pretty(&spec).unwrap()).unwrap();
+        std::fs::write(dir.join("profiles.fasta"), profiles_fasta).unwrap();
+        std::fs::write(dir.join("certified_profiles.tsv"), certified_tsv).unwrap();
+        std::fs::write(dir.join("compendium.json"), serde_json::to_string_pretty(&compendium_entries).unwrap()).unwrap();
+
+        let engine = EggmanEngine::from_pack_path(&dir).unwrap();
+        let cfg = ScreeningConfig::default();
+
+        // 1. Default (unguarded) call recognizes LF.7 / LP.8.1 / XEC even with a 2021 header.
+        let lf7_seq = String::from_utf8_lossy(&lf7);
+        let lp81_seq = String::from_utf8_lossy(&lp81);
+        let xec_seq = String::from_utf8_lossy(&xec_full);
+        let xfut_seq = String::from_utf8_lossy(&xfut_full);
+
+        let r_un = engine.classify_sequence("anachro|2021-12-01", &lf7_seq, &cfg);
+        assert_eq!(r_un.called_lineage, "LF.7");
+        assert!(r_un.masked_future_trunks.is_empty());
+
+        // 2. With --temporal-guard on a 2021/2022 header, 2024-2025 donors are masked.
+        let tg = TemporalGuardConfig {
+            enabled: true,
+            query_year: None,
+            slack_yr: None,
+        };
+        let r_2021 = engine.classify_sequence_with_temporal("anachro|2021-12-01", &lf7_seq, &cfg, &tg);
+        assert!(r_2021.query_year.unwrap() > 2021.9 && r_2021.query_year.unwrap() < 2022.0);
+        for fut in ["KS.1.1", "LF.7", "LP.8.1"] {
+            assert!(r_2021.masked_future_trunks.iter().any(|m| m == fut), "{:?}", r_2021.masked_future_trunks);
+            assert_ne!(r_2021.called_lineage, fut);
+            assert!(!r_2021.constituent_trunks.iter().any(|c| c == fut));
+        }
+
+        let r_2022_lp = engine.classify_sequence_with_temporal("early|2022-06-15", &lp81_seq, &cfg, &tg);
+        assert_ne!(r_2022_lp.called_lineage, "LP.8.1");
+        assert!(r_2022_lp.masked_future_trunks.contains(&"LP.8.1".to_string()));
+        assert!(r_2022_lp.masked_future_trunks.contains(&"LF.7".to_string()));
+        assert!(r_2022_lp.masked_future_trunks.contains(&"KS.1.1".to_string()));
+
+        // Future Tier-2 XEC cannot be certified on 2022 query, nor matched in compendium.
+        let r_2022_xec = engine.classify_sequence_with_temporal("early_xec|2022-06-15", &xec_seq, &cfg, &tg);
+        assert_ne!(r_2022_xec.called_lineage, "XEC");
+        assert!(!r_2022_xec.matches.iter().any(|m| m.label == "XEC"));
+
+        // Future Tier-2 clade X_FUTURE whose parents are 2021 (BA.1 + BA.2) is blocked on 2022 query!
+        let r_2022_xfut = engine.classify_sequence_with_temporal("early_xfut|2022-06-15", &xfut_seq, &cfg, &tg);
+        assert_eq!(r_2022_xfut.called_lineage, "URF");
+        assert!(!r_2022_xfut.matches.iter().any(|m| m.label == "X_FUTURE"));
+
+        // 3. On a 2025 query, all trunks and certified clades remain active.
+        let r_2025_lf = engine.classify_sequence_with_temporal("modern|2025-03-01", &lf7_seq, &cfg, &tg);
+        assert!(r_2025_lf.masked_future_trunks.is_empty());
+        assert_eq!(r_2025_lf.called_lineage, "LF.7");
+
+        let r_2025_lp = engine.classify_sequence_with_temporal("modern|2025-03-01", &lp81_seq, &cfg, &tg);
+        assert!(r_2025_lp.masked_future_trunks.is_empty());
+        assert_eq!(r_2025_lp.called_lineage, "LP.8.1");
+
+        let r_2025_xfut = engine.classify_sequence_with_temporal("modern_xfut|2025-03-01", &xfut_seq, &cfg, &tg);
+        assert_eq!(r_2025_xfut.called_lineage, "X_FUTURE");
+
+        // 4. Safe fallback if temporal threshold would leave < 2 trunks active (query_year = 1990).
+        let tg_1990 = TemporalGuardConfig {
+            enabled: true,
+            query_year: Some(1990.0),
+            slack_yr: Some(0.5),
+        };
+        let r_1990 = engine.classify_sequence_with_temporal("ancient", &lf7_seq, &cfg, &tg_1990);
+        assert_eq!(r_1990.masked_future_trunks.len(), 4);
+        assert_eq!(r_1990.query_year, Some(1990.0));
+        assert!(!r_1990.segments.is_empty());
+
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+}
+
+/// Parse an explicit or delimited decimal year from a FASTA header.
+/// Supports `YYYY-MM-DD`, `YYYY/MM/DD`, `YYYY.frac`, `YYYY-MM`, `YYYY/MM`, `YYYY-XX-XX`, and delimited `YYYY`.
+pub fn parse_header_decimal_year(header: &str) -> Option<f64> {
+    let b = header.as_bytes();
+    let n = b.len();
+    let parse_u32 = |s: &[u8]| -> Option<u32> {
+        if !s.iter().all(|c| c.is_ascii_digit()) {
+            return None;
+        }
+        std::str::from_utf8(s).ok()?.parse::<u32>().ok()
+    };
+    let is_valid_yr = |y: u32| (1900..=2100).contains(&y);
+    let left_ok = |i: usize| -> bool {
+        i == 0 || (!b[i - 1].is_ascii_alphanumeric() && b[i - 1] != b'.')
+    };
+
+    // Pass 1: YYYY-MM-DD or YYYY/MM/DD
+    if n >= 10 {
+        for i in 0..=(n - 10) {
+            if !left_ok(i) {
+                continue;
+            }
+            let sep = b[i + 4];
+            if (sep == b'-' || sep == b'/') && b[i + 7] == sep {
+                if let (Some(y), Some(m), Some(d)) = (
+                    parse_u32(&b[i..i + 4]),
+                    parse_u32(&b[i + 5..i + 7]),
+                    parse_u32(&b[i + 8..i + 10]),
+                ) {
+                    if let Some(dec) = ymd_to_decimal_year(y, m, d) {
+                        let right_ok = i + 10 == n
+                            || !b[i + 10].is_ascii_digit()
+                                && b[i + 10] != b'.'
+                                && !(b[i + 10] == b'-'
+                                    && b.get(i + 11).is_some_and(|c| c.is_ascii_digit()));
+                        if right_ok {
+                            return Some(dec);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // Pass 2: decimal year YYYY.fff (e.g. |2021.45|)
+    if n >= 6 {
+        for i in 0..=(n - 6) {
+            if !left_ok(i) || b[i + 4] != b'.' || !b[i + 5].is_ascii_digit() {
+                continue;
+            }
+            let Some(y) = parse_u32(&b[i..i + 4]) else {
+                continue;
+            };
+            if !is_valid_yr(y) {
+                continue;
+            }
+            let mut end = i + 5;
+            while end < n && b[end].is_ascii_digit() && end - (i + 5) < 6 {
+                end += 1;
+            }
+            let right_ok = end == n || (!b[end].is_ascii_alphanumeric() && b[end] != b'.');
+            if right_ok {
+                if let Ok(val) = std::str::from_utf8(&b[i..end]).unwrap_or("").parse::<f64>() {
+                    if val.is_finite() && (1900.0..2101.0).contains(&val) {
+                        return Some(val);
+                    }
+                }
+            }
+        }
+    }
+
+    // Pass 3: YYYY-MM or YYYY/MM (plus YYYY-XX-XX / YYYY-XX placeholders -> mid-year)
+    if n >= 7 {
+        for i in 0..=(n - 7) {
+            if !left_ok(i) {
+                continue;
+            }
+            let sep = b[i + 4];
+            if sep != b'-' && sep != b'/' {
+                continue;
+            }
+            let Some(y) = parse_u32(&b[i..i + 4]) else {
+                continue;
+            };
+            if !is_valid_yr(y) {
+                continue;
+            }
+            if (&b[i + 5..i + 7] == b"XX" || &b[i + 5..i + 7] == b"xx")
+                && (i + 7 == n
+                    || !b[i + 7].is_ascii_alphanumeric()
+                    || (i + 10 <= n
+                        && b[i + 7] == sep
+                        && (&b[i + 8..i + 10] == b"XX" || &b[i + 8..i + 10] == b"xx")
+                        && (i + 10 == n || !b[i + 10].is_ascii_alphanumeric())))
+            {
+                return Some(y as f64 + 0.5);
+            }
+            if let Some(m) = parse_u32(&b[i + 5..i + 7]) {
+                let right_ok = i + 7 == n
+                    || (!b[i + 7].is_ascii_alphanumeric()
+                        && b[i + 7] != b'-'
+                        && b[i + 7] != b'/'
+                        && b[i + 7] != b'.');
+                if right_ok {
+                    if let Some(dec) = ymd_to_decimal_year(y, m, 15) {
+                        return Some(dec);
+                    }
+                }
+            }
+        }
+    }
+
+    // Pass 4: delimited bare YYYY (e.g. |2023| or /2024(H5N1)) -> mid-year YYYY.5
+    if n >= 4 {
+        for i in 0..=(n - 4) {
+            if !left_ok(i) {
+                continue;
+            }
+            if let Some(y) = parse_u32(&b[i..i + 4]) {
+                if !is_valid_yr(y) {
+                    continue;
+                }
+                let right_ok = i + 4 == n
+                    || (!b[i + 4].is_ascii_alphanumeric()
+                        && b[i + 4] != b'.'
+                        && !(b[i + 4] == b'-'
+                            && b.get(i + 5).is_some_and(|c| c.is_ascii_alphanumeric())));
+                if right_ok {
+                    return Some(y as f64 + 0.5);
+                }
+            }
+        }
+    }
+
+    None
+}
+
+fn is_leap_year(y: u32) -> bool {
+    (y % 4 == 0 && y % 100 != 0) || (y % 400 == 0)
+}
+
+fn days_in_month(y: u32, m: u32) -> u32 {
+    match m {
+        1 | 3 | 5 | 7 | 8 | 10 | 12 => 31,
+        4 | 6 | 9 | 11 => 30,
+        2 => {
+            if is_leap_year(y) {
+                29
+            } else {
+                28
+            }
+        }
+        _ => 0,
+    }
+}
+
+fn ymd_to_decimal_year(y: u32, m: u32, d: u32) -> Option<f64> {
+    if !(1900..=2100).contains(&y) || !(1..=12).contains(&m) {
+        return None;
+    }
+    let dim = days_in_month(y, m);
+    if d < 1 || d > dim {
+        return None;
+    }
+    let mut doy0 = d - 1;
+    for mm in 1..m {
+        doy0 += days_in_month(y, mm);
+    }
+    let total_days = if is_leap_year(y) { 366.0 } else { 365.0 };
+    Some(y as f64 + (doy0 as f64) / total_days)
 }
 
 /// Extract canonical Influenza isolate strain key or prefix before segment delimiter.

@@ -2,7 +2,7 @@
   "pathogen_name": "Sarbecovirus (Betacoronavirus)",
   "reference_name": "Wuhan-Hu-1",
   "pack_version": "2026.11-wildlife-sarbeco",
-  "snapshot_date": "2026-11-16",
+  "snapshot_date": "2026-11-17",
   "curation_sources": "NCBI GenBank bat and pangolin Sarbecovirus whole genomes (N=79 valid assemblies after excluding 4 all-N placeholders; 5 basal trunks: SARS2_Wuhan, SARS1_HSZ, Bat_RpYN06, Bat_HKU3, Bat_BM48)",
   "certification_criteria": "Tier-1 basal coordinate deconvolution across Wuhan-Hu-1 coding coordinates (266..29674)",
   "ref_full_len": 29904,
@@ -104,7 +104,8 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": null
+      "clonal_certified_label": null,
+      "first_sampled_year": 2019.95
     },
     {
       "name": "SARS1_HSZ",
@@ -113,7 +114,8 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": null
+      "clonal_certified_label": null,
+      "first_sampled_year": 2003.72
     },
     {
       "name": "Bat_RpYN06",
@@ -122,7 +124,8 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": null
+      "clonal_certified_label": null,
+      "first_sampled_year": 2020.4
     },
     {
       "name": "Bat_HKU3",
@@ -131,7 +134,8 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": null
+      "clonal_certified_label": null,
+      "first_sampled_year": 2005.33
     },
     {
       "name": "Bat_BM48",
@@ -140,12 +144,14 @@
       "active_range": null,
       "fallback_profile": null,
       "display_alias": null,
-      "clonal_certified_label": null
+      "clonal_certified_label": null,
+      "first_sampled_year": 2008.5
     }
   ],
   "ghost_relabel_rule": null,
   "align_founder_keys": [],
   "epi_founder_order": [],
   "epi_founder_penalty": 0.005,
-  "epi_certified_replacements": []
+  "epi_certified_replacements": [],
+  "default_temporal_slack_yr": 0.5
 }

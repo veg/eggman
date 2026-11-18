@@ -7,11 +7,13 @@
     "descriptive_name": "EA1(Clonal)",
     "structural_formula": "EA1(Clonal)",
     "backbone": "EA1",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2021.9003,
+    "t_mrca_ci_low": 2021.8169,
+    "t_mrca_ci_high": 2021.9329,
     "hxb2_barcode": "EA1:1-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2021.9945,
+    "chronaeon_half_life_yr": 0.5
   },
   {
     "label": "A3",
@@ -21,11 +23,13 @@
     "descriptive_name": "EA3(Clonal)",
     "structural_formula": "EA3(Clonal)",
     "backbone": "EA3",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2021.4882,
+    "t_mrca_ci_low": 2020.2956,
+    "t_mrca_ci_high": 2021.8195,
     "hxb2_barcode": "EA3:1-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2021.8,
+    "chronaeon_half_life_yr": 0.5
   },
   {
     "label": "B3.13",
@@ -35,11 +39,13 @@
     "descriptive_name": "NAm_B313[EA1:PA+HA+NA+MP]",
     "structural_formula": "NAm_B313[EA1:PA+HA+NA+MP]",
     "backbone": "NAm_B313",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2023.941,
+    "t_mrca_ci_low": 2023.6751,
+    "t_mrca_ci_high": 2023.9488,
     "hxb2_barcode": "NAm_B313:1-4554|EA1:4555-8409|NAm_B313:8410-9906|EA1:9907-12298|NAm_B313:12299-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2023.9014,
+    "chronaeon_half_life_yr": 0.5
   },
   {
     "label": "D1.1",
@@ -49,11 +55,13 @@
     "descriptive_name": "NAm_D1[EA3:PB1+HA+MP+NS]",
     "structural_formula": "NAm_D1[EA3:PB1+HA+MP+NS]",
     "backbone": "NAm_D1",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2024.4817,
+    "t_mrca_ci_low": 2023.7275,
+    "t_mrca_ci_high": 2024.6162,
     "hxb2_barcode": "NAm_D1:1-2280|EA3:2281-4554|NAm_D1:4555-6705|EA3:6706-8409|NAm_D1:8410-11316|EA3:11317-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2024.7869,
+    "chronaeon_half_life_yr": 0.5
   },
   {
     "label": "D1.3",
@@ -63,11 +71,13 @@
     "descriptive_name": "EA3[NAm_D1:PB2+PA+NP]",
     "structural_formula": "EA3[NAm_D1:PB2+PA+NP]",
     "backbone": "EA3",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2024.56,
+    "t_mrca_ci_low": 2024.39,
+    "t_mrca_ci_high": 2024.66,
     "hxb2_barcode": "NAm_D1:1-2280|EA3:2281-4554|NAm_D1:4555-6705|EA3:6706-8409|NAm_D1:8410-9906|EA3:9907-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2024.8333,
+    "chronaeon_half_life_yr": 0.5
   },
   {
     "label": "B3.6",
@@ -77,11 +87,13 @@
     "descriptive_name": "EA1[NAm_B36:PB2+NP | NAm_B313:PB1+NS]",
     "structural_formula": "EA1[NAm_B36:PB2+NP | NAm_B313:PB1+NS]",
     "backbone": "EA1",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2023.2228,
+    "t_mrca_ci_low": 2022.6689,
+    "t_mrca_ci_high": 2023.3865,
     "hxb2_barcode": "NAm_B36:1-2280|NAm_B313:2281-4554|EA1:4555-8409|NAm_B36:8410-9906|EA1:9907-12298|NAm_B313:12299-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2023.7342,
+    "chronaeon_half_life_yr": 0.5
   },
   {
     "label": "C2.1",
@@ -91,11 +103,13 @@
     "descriptive_name": "NAm_C2[EA2:HA+NA | EA1:NP+MP+NS]",
     "structural_formula": "NAm_C2[EA2:HA+NA | EA1:NP+MP+NS]",
     "backbone": "NAm_C2",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2023.3094,
+    "t_mrca_ci_low": 2022.6255,
+    "t_mrca_ci_high": 2023.5923,
     "hxb2_barcode": "NAm_C2:1-6705|EA2:6706-8409|EA1:8410-9906|EA2:9907-11316|EA1:11317-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2023.8027,
+    "chronaeon_half_life_yr": 0.5
   },
   {
     "label": "B2.1",
@@ -105,11 +119,13 @@
     "descriptive_name": "EA1[NAm_B2:PB2+NP]",
     "structural_formula": "EA1[NAm_B2:PB2+NP]",
     "backbone": "EA1",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2022.1128,
+    "t_mrca_ci_low": 2022.0776,
+    "t_mrca_ci_high": 2022.131,
     "hxb2_barcode": "NAm_B2:1-2280|EA1:2281-8409|NAm_B2:8410-9906|EA1:9907-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2022.1644,
+    "chronaeon_half_life_yr": 0.5
   },
   {
     "label": "D1.8",
@@ -119,11 +135,13 @@
     "descriptive_name": "EA3[NAm_D1:PB2+PA+NA | NAm_B2:NP]",
     "structural_formula": "EA3[NAm_D1:PB2+PA+NA | NAm_B2:NP]",
     "backbone": "EA3",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2025.7197,
+    "t_mrca_ci_low": 2024.8576,
+    "t_mrca_ci_high": 2025.8299,
     "hxb2_barcode": "NAm_D1:1-2280|EA3:2281-4554|NAm_D1:4555-6705|EA3:6706-8409|NAm_B2:8410-9906|NAm_D1:9907-11316|EA3:11317-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2025.9123,
+    "chronaeon_half_life_yr": 0.5
   },
   {
     "label": "B3.2",
@@ -133,10 +151,12 @@
     "descriptive_name": "EA1[NAm_B32:PB2 | NAm_B2:PB1 | NAm_B36:NP | NAm_B313:NS]",
     "structural_formula": "EA1[NAm_B32:PB2 | NAm_B2:PB1 | NAm_B36:NP | NAm_B313:NS]",
     "backbone": "EA1",
-    "t_mrca": null,
-    "t_mrca_ci_low": null,
-    "t_mrca_ci_high": null,
+    "t_mrca": 2022.2649,
+    "t_mrca_ci_low": 2022.0491,
+    "t_mrca_ci_high": 2022.2629,
     "hxb2_barcode": "NAm_B32:1-2280|NAm_B2:2281-4554|EA1:4555-8409|NAm_B36:8410-9906|EA1:9907-12298|NAm_B313:12299-13136",
-    "scope": "full"
+    "scope": "full",
+    "first_sampled_year": 2022.2137,
+    "chronaeon_half_life_yr": 0.5
   }
 ]
