@@ -90,7 +90,8 @@
         2021.9421
       ],
       "first_sampled_year": 2021.9945,
-      "chronaeon_half_life_yr": 0.5
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2022.6575
     },
     {
       "name": "EA3",
@@ -100,13 +101,14 @@
       "fallback_profile": null,
       "display_alias": "A3",
       "clonal_certified_label": "A3",
-      "t_mrca": 2021.8986,
+      "t_mrca": 2021.4789,
       "t_mrca_ci": [
-        2019.6836,
-        2021.9084
+        2020.4792,
+        2022.7566
       ],
-      "first_sampled_year": 2021.8,
-      "chronaeon_half_life_yr": 0.5
+      "first_sampled_year": 2021.1616,
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2022.3288
     },
     {
       "name": "EA4",
@@ -116,13 +118,14 @@
       "fallback_profile": null,
       "display_alias": "A4",
       "clonal_certified_label": null,
-      "t_mrca": 2020.3398,
+      "t_mrca": 2020.6541,
       "t_mrca_ci": [
-        2019.8308,
-        2020.7443
+        2020.3851,
+        2021.5365
       ],
       "first_sampled_year": 2020.7869,
-      "chronaeon_half_life_yr": 0.5
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2021.274
     },
     {
       "name": "EA2",
@@ -138,7 +141,8 @@
         2022.1138
       ],
       "first_sampled_year": 2022.126,
-      "chronaeon_half_life_yr": 0.5
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2023.4932
     },
     {
       "name": "NAm_B313",
@@ -148,13 +152,14 @@
       "fallback_profile": null,
       "display_alias": null,
       "clonal_certified_label": null,
-      "t_mrca": 2022.0057,
+      "t_mrca": 2023.8739,
       "t_mrca_ci": [
-        2021.6549,
-        2022.1551
+        2023.4614,
+        2024.0116
       ],
-      "first_sampled_year": 2022.2137,
-      "chronaeon_half_life_yr": 0.5
+      "first_sampled_year": 2023.9014,
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2024.3005
     },
     {
       "name": "NAm_D1",
@@ -164,13 +169,14 @@
       "fallback_profile": null,
       "display_alias": null,
       "clonal_certified_label": null,
-      "t_mrca": 2024.4817,
+      "t_mrca": 2024.4341,
       "t_mrca_ci": [
-        2024.21,
-        2024.57
+        2023.9228,
+        2024.5341
       ],
       "first_sampled_year": 2024.0,
-      "chronaeon_half_life_yr": 0.5
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2024.8716
     },
     {
       "name": "NAm_B36",
@@ -186,7 +192,8 @@
         2023.5657
       ],
       "first_sampled_year": 2022.2137,
-      "chronaeon_half_life_yr": 0.5
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2023.4932
     },
     {
       "name": "NAm_C2",
@@ -202,7 +209,8 @@
         2023.5923
       ],
       "first_sampled_year": 2023.8027,
-      "chronaeon_half_life_yr": 0.5
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2024.5164
     },
     {
       "name": "NAm_B2",
@@ -218,7 +226,8 @@
         2022.131
       ],
       "first_sampled_year": 2022.1644,
-      "chronaeon_half_life_yr": 0.5
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2023.4932
     },
     {
       "name": "NAm_B32",
@@ -234,7 +243,8 @@
         2022.1728
       ],
       "first_sampled_year": 2022.2137,
-      "chronaeon_half_life_yr": 0.5
+      "chronaeon_half_life_yr": 0.5,
+      "first_submitted_year": 2023.4932
     }
   ],
   "ghost_relabel_rule": null,
@@ -243,5 +253,14 @@
   "epi_founder_penalty": 0.005,
   "epi_certified_replacements": [],
   "default_temporal_slack_yr": 0.5,
-  "chronaeon_half_life_yr": 0.5
+  "chronaeon_half_life_yr": 0.5,
+  "min_segment_identity": 0.9,
+  "gate2_min_dom_full": 5,
+  "gate2_min_dom_partial": 3,
+  "gate2_max_p_full": 0.001,
+  "gate2_max_p_partial": 0.01,
+  "gate3_min_stem_full": 4,
+  "gate3_min_stem_partial": 3,
+  "gate3_max_p_full": 0.05,
+  "gate3_max_p_partial": 0.05
 }

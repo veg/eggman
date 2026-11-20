@@ -2,7 +2,7 @@ use clap::Parser;
 use rayon::prelude::*;
 use eggman_core::{
     EggmanEngine, PathogenProfilePack, PathogenSpec, ScreeningConfig, SequenceResult,
-    TemporalGuardConfig,
+    TemporalFloorMode, TemporalGuardConfig,
 };
 use std::fs;
 use std::io::{self, Write};
@@ -81,9 +81,13 @@ struct Args {
     #[arg(long)]
     query_year: Option<f64>,
 
-    /// Temporal lookahead tolerance in years for --temporal-guard (default: pack setting, 0.5 non-HIV / 3.0 HIV-1)
+    /// Temporal lookahead tolerance in years for --temporal-guard (default: pack setting in sampled mode, or 0.0 in submission mode)
     #[arg(long)]
     temporal_slack_yr: Option<f64>,
+
+    /// Temporal floor reference mode for --temporal-guard (`sampled` or `submission`)
+    #[arg(long, default_value = "sampled")]
+    temporal_mode: String,
 
     /// Segmented virus FASTA grouping mode (`auto`, `single_isolate`, `per_record`)
     #[arg(long, default_value = "auto")]
@@ -164,10 +168,22 @@ fn main() {
         die(2, &format!("invalid configuration: {}", e));
     }
 
+    let temporal_mode = match args.temporal_mode.trim().to_ascii_lowercase().as_str() {
+        "sampled" => TemporalFloorMode::Sampled,
+        "submission" => TemporalFloorMode::Submission,
+        other => die(
+            2,
+            &format!(
+                "invalid --temporal-mode '{}' (expected `sampled` or `submission`)",
+                other
+            ),
+        ),
+    };
     let temporal_cfg = TemporalGuardConfig {
         enabled: args.temporal_guard,
         query_year: args.query_year,
         slack_yr: args.temporal_slack_yr,
+        mode: temporal_mode,
     };
     if let Err(e) = temporal_cfg.validate() {
         die(2, &format!("invalid temporal guard configuration: {}", e));

@@ -13,7 +13,8 @@
     "hxb2_barcode": "EA1:1-13136",
     "scope": "full",
     "first_sampled_year": 2021.9945,
-    "chronaeon_half_life_yr": 0.5
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2022.7945
   },
   {
     "label": "A3",
@@ -23,13 +24,14 @@
     "descriptive_name": "EA3(Clonal)",
     "structural_formula": "EA3(Clonal)",
     "backbone": "EA3",
-    "t_mrca": 2021.4882,
-    "t_mrca_ci_low": 2020.2956,
-    "t_mrca_ci_high": 2021.8195,
+    "t_mrca": 2020.2651,
+    "t_mrca_ci_low": 2019.1386,
+    "t_mrca_ci_high": 2022.108,
     "hxb2_barcode": "EA3:1-13136",
     "scope": "full",
-    "first_sampled_year": 2021.8,
-    "chronaeon_half_life_yr": 0.5
+    "first_sampled_year": 2021.1616,
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2022.3288
   },
   {
     "label": "B3.13",
@@ -40,12 +42,13 @@
     "structural_formula": "NAm_B313[EA1:PA+HA+NA+MP]",
     "backbone": "NAm_B313",
     "t_mrca": 2023.941,
-    "t_mrca_ci_low": 2023.6751,
-    "t_mrca_ci_high": 2023.9488,
+    "t_mrca_ci_low": 2023.7766,
+    "t_mrca_ci_high": 2024.1882,
     "hxb2_barcode": "NAm_B313:1-4554|EA1:4555-8409|NAm_B313:8410-9906|EA1:9907-12298|NAm_B313:12299-13136",
     "scope": "full",
     "first_sampled_year": 2023.9014,
-    "chronaeon_half_life_yr": 0.5
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2024.3005
   },
   {
     "label": "D1.1",
@@ -61,7 +64,8 @@
     "hxb2_barcode": "NAm_D1:1-2280|EA3:2281-4554|NAm_D1:4555-6705|EA3:6706-8409|NAm_D1:8410-11316|EA3:11317-13136",
     "scope": "full",
     "first_sampled_year": 2024.7869,
-    "chronaeon_half_life_yr": 0.5
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2024.8716
   },
   {
     "label": "D1.3",
@@ -77,7 +81,8 @@
     "hxb2_barcode": "NAm_D1:1-2280|EA3:2281-4554|NAm_D1:4555-6705|EA3:6706-8409|NAm_D1:8410-9906|EA3:9907-13136",
     "scope": "full",
     "first_sampled_year": 2024.8333,
-    "chronaeon_half_life_yr": 0.5
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2024.929
   },
   {
     "label": "B3.6",
@@ -93,7 +98,8 @@
     "hxb2_barcode": "NAm_B36:1-2280|NAm_B313:2281-4554|EA1:4555-8409|NAm_B36:8410-9906|EA1:9907-12298|NAm_B313:12299-13136",
     "scope": "full",
     "first_sampled_year": 2023.7342,
-    "chronaeon_half_life_yr": 0.5
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2024.3251
   },
   {
     "label": "C2.1",
@@ -109,7 +115,8 @@
     "hxb2_barcode": "NAm_C2:1-6705|EA2:6706-8409|EA1:8410-9906|EA2:9907-11316|EA1:11317-13136",
     "scope": "full",
     "first_sampled_year": 2023.8027,
-    "chronaeon_half_life_yr": 0.5
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2024.5164
   },
   {
     "label": "B2.1",
@@ -125,7 +132,8 @@
     "hxb2_barcode": "NAm_B2:1-2280|EA1:2281-8409|NAm_B2:8410-9906|EA1:9907-13136",
     "scope": "full",
     "first_sampled_year": 2022.1644,
-    "chronaeon_half_life_yr": 0.5
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2023.4932
   },
   {
     "label": "D1.8",
@@ -136,12 +144,13 @@
     "structural_formula": "EA3[NAm_D1:PB2+PA+NA | NAm_B2:NP]",
     "backbone": "EA3",
     "t_mrca": 2025.7197,
-    "t_mrca_ci_low": 2024.8576,
-    "t_mrca_ci_high": 2025.8299,
+    "t_mrca_ci_low": 2024.8594,
+    "t_mrca_ci_high": 2025.831,
     "hxb2_barcode": "NAm_D1:1-2280|EA3:2281-4554|NAm_D1:4555-6705|EA3:6706-8409|NAm_B2:8410-9906|NAm_D1:9907-11316|EA3:11317-13136",
     "scope": "full",
     "first_sampled_year": 2025.9123,
-    "chronaeon_half_life_yr": 0.5
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2026.2904
   },
   {
     "label": "B3.2",
@@ -152,11 +161,12 @@
     "structural_formula": "EA1[NAm_B32:PB2 | NAm_B2:PB1 | NAm_B36:NP | NAm_B313:NS]",
     "backbone": "EA1",
     "t_mrca": 2022.2649,
-    "t_mrca_ci_low": 2022.0491,
-    "t_mrca_ci_high": 2022.2629,
+    "t_mrca_ci_low": 2022.1446,
+    "t_mrca_ci_high": 2022.3296,
     "hxb2_barcode": "NAm_B32:1-2280|NAm_B2:2281-4554|EA1:4555-8409|NAm_B36:8410-9906|EA1:9907-12298|NAm_B313:12299-13136",
     "scope": "full",
     "first_sampled_year": 2022.2137,
-    "chronaeon_half_life_yr": 0.5
+    "chronaeon_half_life_yr": 0.5,
+    "first_submitted_year": 2023.4932
   }
 ]

@@ -119,6 +119,7 @@
         2019.9348
       ],
       "first_sampled_year": 2019.9836,
+      "first_submitted_year": 2020.0301,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -135,6 +136,7 @@
         2020.7192
       ],
       "first_sampled_year": 2020.8087,
+      "first_submitted_year": 2021.0521,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -147,10 +149,11 @@
       "clonal_certified_label": "P.1",
       "t_mrca": 2020.6607,
       "t_mrca_ci": [
-        2020.1748,
-        2020.9126
+        2020.1749,
+        2020.9145
       ],
       "first_sampled_year": 2021.0,
+      "first_submitted_year": 2021.4986,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -167,6 +170,7 @@
         2020.54
       ],
       "first_sampled_year": 2020.8005,
+      "first_submitted_year": 2021.3342,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -183,6 +187,7 @@
         2021.72
       ],
       "first_sampled_year": 2021.8247,
+      "first_submitted_year": 2021.9534,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -195,10 +200,11 @@
       "clonal_certified_label": "BA.2",
       "t_mrca": 2021.9304,
       "t_mrca_ci": [
-        2021.731,
-        2021.9188
+        2021.7635,
+        2022.0426
       ],
       "first_sampled_year": 2021.8712,
+      "first_submitted_year": 2022.063,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -215,6 +221,7 @@
         2022.1912
       ],
       "first_sampled_year": 2022.2192,
+      "first_submitted_year": 2022.3068,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -231,6 +238,7 @@
         2022.0431
       ],
       "first_sampled_year": 2022.0849,
+      "first_submitted_year": 2022.5068,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -247,6 +255,7 @@
         2022.6368
       ],
       "first_sampled_year": 2022.6411,
+      "first_submitted_year": 2022.8,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -259,10 +268,11 @@
       "clonal_certified_label": null,
       "t_mrca": 2022.1556,
       "t_mrca_ci": [
-        2021.44,
-        2022.45
+        2020.4323,
+        2022.5259
       ],
       "first_sampled_year": 2022.6192,
+      "first_submitted_year": 2022.6932,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -279,6 +289,7 @@
         2023.6578
       ],
       "first_sampled_year": 2023.8959,
+      "first_submitted_year": 2023.9863,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -291,10 +302,11 @@
       "clonal_certified_label": null,
       "t_mrca": 2024.2099,
       "t_mrca_ci": [
-        2023.8006,
-        2024.3709
+        2023.8007,
+        2024.374
       ],
       "first_sampled_year": 2024.4098,
+      "first_submitted_year": 2024.5164,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -311,6 +323,7 @@
         2024.22
       ],
       "first_sampled_year": 2024.4426,
+      "first_submitted_year": 2024.6612,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -327,6 +340,7 @@
         2025.13
       ],
       "first_sampled_year": 2025.9534,
+      "first_submitted_year": 2026.0301,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -339,10 +353,11 @@
       "clonal_certified_label": "LF.7",
       "t_mrca": 2024.3958,
       "t_mrca_ci": [
-        2024.3526,
-        2024.4671
+        2024.3662,
+        2024.6995
       ],
       "first_sampled_year": 2024.571,
+      "first_submitted_year": 2024.7158,
       "chronaeon_half_life_yr": 0.25
     },
     {
@@ -355,10 +370,11 @@
       "clonal_certified_label": "LP.8.1",
       "t_mrca": 2024.6609,
       "t_mrca_ci": [
-        2024.285,
-        2024.8407
+        2024.2862,
+        2024.8531
       ],
       "first_sampled_year": 2024.8279,
+      "first_submitted_year": 2025.0575,
       "chronaeon_half_life_yr": 0.25
     }
   ],
@@ -368,5 +384,14 @@
   "epi_founder_penalty": 0.005,
   "epi_certified_replacements": [],
   "default_temporal_slack_yr": 0.5,
-  "chronaeon_half_life_yr": 0.25
+  "chronaeon_half_life_yr": 0.25,
+  "min_segment_identity": 0.9,
+  "gate2_min_dom_full": 3,
+  "gate2_min_dom_partial": 2,
+  "gate2_max_p_full": 0.05,
+  "gate2_max_p_partial": 0.05,
+  "gate3_min_stem_full": 2,
+  "gate3_min_stem_partial": 1,
+  "gate3_max_p_full": 0.25,
+  "gate3_max_p_partial": 0.5
 }

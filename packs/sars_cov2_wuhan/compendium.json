@@ -11,6 +11,7 @@
     "t_mrca_ci_low": 2019.2691,
     "t_mrca_ci_high": 2019.9348,
     "first_sampled_year": 2019.9836,
+    "first_submitted_year": 2020.0301,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "B:266-29674",
     "scope": "full"
@@ -27,6 +28,7 @@
     "t_mrca_ci_low": 2020.3195,
     "t_mrca_ci_high": 2020.7192,
     "first_sampled_year": 2020.8087,
+    "first_submitted_year": 2021.0521,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "B.1.1.7:266-29674",
     "scope": "full"
@@ -40,9 +42,10 @@
     "structural_formula": "P.1(Clonal)",
     "backbone": "P.1",
     "t_mrca": 2020.6607,
-    "t_mrca_ci_low": 2020.1748,
-    "t_mrca_ci_high": 2020.9126,
+    "t_mrca_ci_low": 2020.1749,
+    "t_mrca_ci_high": 2020.9145,
     "first_sampled_year": 2021.0,
+    "first_submitted_year": 2021.4986,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "P.1:266-29674",
     "scope": "full"
@@ -59,6 +62,7 @@
     "t_mrca_ci_low": 2019.34,
     "t_mrca_ci_high": 2020.54,
     "first_sampled_year": 2020.8005,
+    "first_submitted_year": 2021.3342,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "B.1.617.2:266-29674",
     "scope": "full"
@@ -75,6 +79,7 @@
     "t_mrca_ci_low": 2021.077,
     "t_mrca_ci_high": 2021.72,
     "first_sampled_year": 2021.8247,
+    "first_submitted_year": 2021.9534,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BA.1:266-29674",
     "scope": "full"
@@ -88,9 +93,10 @@
     "structural_formula": "BA.2(Clonal)",
     "backbone": "BA.2",
     "t_mrca": 2021.9304,
-    "t_mrca_ci_low": 2021.731,
-    "t_mrca_ci_high": 2021.9188,
+    "t_mrca_ci_low": 2021.7635,
+    "t_mrca_ci_high": 2022.0426,
     "first_sampled_year": 2021.8712,
+    "first_submitted_year": 2022.063,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BA.2:266-29674",
     "scope": "full"
@@ -107,6 +113,7 @@
     "t_mrca_ci_low": 2021.8646,
     "t_mrca_ci_high": 2022.1912,
     "first_sampled_year": 2022.2192,
+    "first_submitted_year": 2022.3068,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BA.4:266-29674",
     "scope": "full"
@@ -123,6 +130,7 @@
     "t_mrca_ci_low": 2021.5683,
     "t_mrca_ci_high": 2022.0431,
     "first_sampled_year": 2022.0849,
+    "first_submitted_year": 2022.5068,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BA.5:266-29674",
     "scope": "full"
@@ -139,6 +147,7 @@
     "t_mrca_ci_low": 2022.8007,
     "t_mrca_ci_high": 2023.6578,
     "first_sampled_year": 2023.8959,
+    "first_submitted_year": 2023.9863,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "JN.1:266-29674",
     "scope": "full"
@@ -155,6 +164,7 @@
     "t_mrca_ci_low": 2022.94,
     "t_mrca_ci_high": 2025.13,
     "first_sampled_year": 2025.9534,
+    "first_submitted_year": 2026.0301,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BA.3.2:266-29674",
     "scope": "full"
@@ -168,9 +178,10 @@
     "structural_formula": "LF.7(Clonal)",
     "backbone": "LF.7",
     "t_mrca": 2024.3958,
-    "t_mrca_ci_low": 2024.3526,
-    "t_mrca_ci_high": 2024.4671,
+    "t_mrca_ci_low": 2024.3662,
+    "t_mrca_ci_high": 2024.6995,
     "first_sampled_year": 2024.571,
+    "first_submitted_year": 2024.7158,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "LF.7:266-29674",
     "scope": "full"
@@ -184,9 +195,10 @@
     "structural_formula": "LP.8.1(Clonal)",
     "backbone": "LP.8.1",
     "t_mrca": 2024.6609,
-    "t_mrca_ci_low": 2024.285,
-    "t_mrca_ci_high": 2024.8407,
+    "t_mrca_ci_low": 2024.2862,
+    "t_mrca_ci_high": 2024.8531,
     "first_sampled_year": 2024.8279,
+    "first_submitted_year": 2025.0575,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "LP.8.1:266-29674",
     "scope": "full"
@@ -203,6 +215,7 @@
     "t_mrca_ci_low": 2022.4681,
     "t_mrca_ci_high": 2022.5981,
     "first_sampled_year": 2022.7041,
+    "first_submitted_year": 2022.8,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BJ.1:266-22918|BM.1.1.1:22919-29674",
     "scope": "full"
@@ -219,6 +232,7 @@
     "t_mrca_ci_low": 2022.6409,
     "t_mrca_ci_high": 2022.9126,
     "first_sampled_year": 2022.9808,
+    "first_submitted_year": 2023.126,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BJ.1:266-22918|BM.1.1.1:22919-29674",
     "scope": "full"
@@ -232,9 +246,10 @@
     "structural_formula": "BJ.1[BM.1.1.1:S..ORF10]",
     "backbone": "BJ.1",
     "t_mrca": 2022.8753,
-    "t_mrca_ci_low": 2022.6522,
-    "t_mrca_ci_high": 2023.0736,
+    "t_mrca_ci_low": 2022.654,
+    "t_mrca_ci_high": 2023.1086,
     "first_sampled_year": 2023.0603,
+    "first_submitted_year": 2023.1233,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BJ.1:266-22918|BM.1.1.1:22919-29674",
     "scope": "full"
@@ -248,9 +263,10 @@
     "structural_formula": "B.1.617.2[BA.1:S..ORF3a]",
     "backbone": "B.1.617.2",
     "t_mrca": 2022.0389,
-    "t_mrca_ci_low": 2021.8742,
-    "t_mrca_ci_high": 2022.0801,
+    "t_mrca_ci_low": 2021.8755,
+    "t_mrca_ci_high": 2022.0869,
     "first_sampled_year": 2022.0384,
+    "first_submitted_year": 2022.2795,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "B.1.617.2:266-21562|BA.1:21563-25469|B.1.617.2:25470-29674",
     "scope": "full"
@@ -267,6 +283,7 @@
     "t_mrca_ci_low": 2021.7986,
     "t_mrca_ci_high": 2022.0312,
     "first_sampled_year": 2022.0493,
+    "first_submitted_year": 2022.1205,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BA.1:266-11536|BA.2:11537-29674",
     "scope": "full"
@@ -283,6 +300,7 @@
     "t_mrca_ci_low": 2021.5905,
     "t_mrca_ci_high": 2021.9952,
     "first_sampled_year": 2022.0164,
+    "first_submitted_year": 2022.1178,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "B.1.617.2:266-5386|BA.1:5387-29674",
     "scope": "full"
@@ -299,6 +317,7 @@
     "t_mrca_ci_low": 2019.0865,
     "t_mrca_ci_high": 2022.5319,
     "first_sampled_year": 2022.6795,
+    "first_submitted_year": 2022.7945,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "B.1.617.2:266-22626|BA.2:22627-25526|B.1.617.2:25527-29674",
     "scope": "full"
@@ -315,6 +334,7 @@
     "t_mrca_ci_low": 2022.54,
     "t_mrca_ci_high": 2022.77,
     "first_sampled_year": 2022.8219,
+    "first_submitted_year": 2022.9753,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BA.5:266-9800|BM.1.1.1:9801-29674",
     "scope": "full"
@@ -331,6 +351,7 @@
     "t_mrca_ci_low": 2021.93,
     "t_mrca_ci_high": 2022.57,
     "first_sampled_year": 2022.7699,
+    "first_submitted_year": 2022.9753,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BA.2:266-14297|B.1.617.2:14298-21909|BA.2:21910-24734|B.1.617.2:24735-27511|BA.2:27512-29674",
     "scope": "full"
@@ -347,6 +368,7 @@
     "t_mrca_ci_low": 2022.6849,
     "t_mrca_ci_high": 2023.8447,
     "first_sampled_year": 2023.8548,
+    "first_submitted_year": 2024.071,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BJ.1:266-5315|JN.1:5316-29674",
     "scope": "full"
@@ -363,6 +385,7 @@
     "t_mrca_ci_low": 2024.2188,
     "t_mrca_ci_high": 2024.5167,
     "first_sampled_year": 2024.6339,
+    "first_submitted_year": 2024.8251,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "KS.1.1:266-21738|KP.3.3:21739-29674",
     "scope": "full"
@@ -376,9 +399,10 @@
     "structural_formula": "BM.1.1.1(Clonal)",
     "backbone": "BM.1.1.1",
     "t_mrca": 2022.8915,
-    "t_mrca_ci_low": 2022.5426,
-    "t_mrca_ci_high": 2022.8972,
+    "t_mrca_ci_low": 2022.5774,
+    "t_mrca_ci_high": 2022.9205,
     "first_sampled_year": 2022.8493,
+    "first_submitted_year": 2022.9753,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BM.1.1.1:266-29674",
     "scope": "full"
@@ -395,6 +419,7 @@
     "t_mrca_ci_low": 2022.4,
     "t_mrca_ci_high": 2024.07,
     "first_sampled_year": 2024.3087,
+    "first_submitted_year": 2024.6612,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "BJ.1:266-18894|JN.1:18895-29674",
     "scope": "full"
@@ -411,6 +436,7 @@
     "t_mrca_ci_low": 2022.36,
     "t_mrca_ci_high": 2025.05,
     "first_sampled_year": 2025.6164,
+    "first_submitted_year": 2025.6438,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "LP.8.1:266-8818|LF.7:8819-22599|KP.3.3:22600-29674",
     "scope": "full"
@@ -424,9 +450,10 @@
     "structural_formula": "LP.8.1[LF.7:ORF1a..S]",
     "backbone": "LP.8.1",
     "t_mrca": 2024.4775,
-    "t_mrca_ci_low": 2022.978,
-    "t_mrca_ci_high": 2025.0143,
+    "t_mrca_ci_low": 2022.979,
+    "t_mrca_ci_high": 2025.0175,
     "first_sampled_year": 2025.011,
+    "first_submitted_year": 2025.0658,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "LP.8.1:266-8818|LF.7:8819-22120|LP.8.1:22121-29674",
     "scope": "full"
@@ -440,9 +467,10 @@
     "structural_formula": "JN.1[LF.7:ORF1a..S | KP.3.3:S..ORF10]",
     "backbone": "JN.1",
     "t_mrca": 2025.3259,
-    "t_mrca_ci_low": 2024.5257,
-    "t_mrca_ci_high": 2025.5058,
+    "t_mrca_ci_low": 2024.5414,
+    "t_mrca_ci_high": 2025.546,
     "first_sampled_year": 2025.474,
+    "first_submitted_year": 2025.5425,
     "chronaeon_half_life_yr": 0.25,
     "hxb2_barcode": "JN.1:266-12892|LF.7:12893-22599|KP.3.3:22600-29674",
     "scope": "full"

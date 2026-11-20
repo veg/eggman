@@ -2,7 +2,7 @@
   "name": "eggman-wasm",
   "type": "module",
   "description": "WebAssembly bindings for EGGMAN coordinate-anchored viral subtyping and mosaic deconvolution",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "license": "MIT",
   "files": [
     "eggman_wasm_bg.wasm",

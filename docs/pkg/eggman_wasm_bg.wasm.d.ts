@@ -10,6 +10,7 @@ export const wasmeggman_load_custom_pack: (a: number, b: number, c: number, d: n
 export const wasmeggman_new: () => number;
 export const wasmeggman_screen_fasta: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
 export const wasmeggman_screen_with_pack: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => [number, number];
+export const wasmeggman_screen_with_pack_and_temporal: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number) => [number, number];
 export const __wbindgen_externrefs: WebAssembly.Table;
 export const __wbindgen_malloc: (a: number, b: number) => number;
 export const __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

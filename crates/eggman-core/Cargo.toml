@@ -1,6 +1,6 @@
 [package]
 name = "eggman-core"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 description = "Exact Genomic Genealogy and Mosaic Ancestry Nomenclature (EGGMAN): coordinate-anchored viral recombination, reassortment, and subtyping engine"
 license = "MIT"

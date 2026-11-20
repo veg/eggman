@@ -1,6 +1,6 @@
 use eggman_core::{
     CompendiumEntry, EggmanEngine, GeneLandmark, PathogenProfilePack, ScreeningConfig,
-    SegmentedAssemblyResult, SequenceResult,
+    SegmentedAssemblyResult, SequenceResult, TemporalFloorMode, TemporalGuardConfig,
 };
 use serde::Serialize;
 use wasm_bindgen::prelude::*;
@@ -403,6 +403,41 @@ impl WasmEggman {
         p_fisher_thresh: f64,
         mask_hypervariable_loops: bool,
     ) -> String {
+        self.screen_with_pack_and_temporal(
+            pack_id,
+            fasta_text,
+            seg_mode,
+            gamma,
+            min_span_nt,
+            min_informative_snps,
+            p_fisher_thresh,
+            mask_hypervariable_loops,
+            false,
+            "sampled",
+            f64::NAN,
+            f64::NAN,
+        )
+    }
+
+    /// Screen a FASTA string with optional ChronAeon non-lookahead temporal guarding
+    /// (`temporal_mode`: `"sampled"` or `"submission"`; pass `<= 0` or `NaN` for `query_year` to parse from FASTA headers,
+    /// and `< 0` or `NaN` for `temporal_slack_yr` to use pack/mode defaults).
+    #[allow(clippy::too_many_arguments)]
+    pub fn screen_with_pack_and_temporal(
+        &self,
+        pack_id: &str,
+        fasta_text: &str,
+        seg_mode: &str,
+        gamma: f64,
+        min_span_nt: usize,
+        min_informative_snps: usize,
+        p_fisher_thresh: f64,
+        mask_hypervariable_loops: bool,
+        temporal_guard: bool,
+        temporal_mode: &str,
+        query_year: f64,
+        temporal_slack_yr: f64,
+    ) -> String {
         let detection = self.detect_pathogen_internal(fasta_text);
         let chosen_id = if pack_id.trim().eq_ignore_ascii_case("auto") || pack_id.trim().is_empty()
         {
@@ -418,8 +453,30 @@ impl WasmEggman {
             p_fisher_thresh,
             mask_hypervariable_loops,
         );
-        let (assembly, results, assembled_fasta) =
-            engine.classify_fasta_with_segmentation(fasta_text, seg_mode, &cfg);
+        let mode = match temporal_mode.trim().to_ascii_lowercase().as_str() {
+            "submission" | "submitted" => TemporalFloorMode::Submission,
+            _ => TemporalFloorMode::Sampled,
+        };
+        let temporal_cfg = TemporalGuardConfig {
+            enabled: temporal_guard,
+            query_year: if query_year.is_finite() && query_year > 0.0 {
+                Some(query_year)
+            } else {
+                None
+            },
+            slack_yr: if temporal_slack_yr.is_finite() && temporal_slack_yr >= 0.0 {
+                Some(temporal_slack_yr)
+            } else {
+                None
+            },
+            mode,
+        };
+        let (assembly, results, assembled_fasta) = engine.classify_fasta_with_segmentation_temporal(
+            fasta_text,
+            seg_mode,
+            &cfg,
+            &temporal_cfg,
+        );
         let payload = MultiPackScreenResponse {
             active_pack: canonical_id.to_string(),
             detection,
@@ -456,7 +513,7 @@ impl WasmEggman {
         serde_json::to_string(&results).unwrap_or_else(|_| "[]".to_string())
     }
 
-    /// Return the embedded HIV-1 200-lineage reference compendium as a JSON array.
+    /// Return the embedded HIV-1 171-lineage reference compendium as a JSON array.
     pub fn get_compendium_json(&self) -> String {
         serde_json::to_string(&self.hiv1.compendium).unwrap_or_else(|_| "[]".to_string())
     }
@@ -550,5 +607,33 @@ mod wasm_multipathogen_tests {
         let parsed: serde_json::Value = serde_json::from_str(&out_json).unwrap();
         assert_eq!(parsed["active_pack"], "custom");
         assert_eq!(parsed["results"].as_array().unwrap().len(), 7);
+    }
+
+    #[test]
+    fn wasm_temporal_guard_masks_future_clades() {
+        let wasm = WasmEggman::new();
+        let fasta = include_str!("../../../docs/examples/sars_cov2_recomb.fasta");
+        let out_json = wasm.screen_with_pack_and_temporal(
+            "sc2",
+            fasta,
+            "auto",
+            0.0,
+            0,
+            5,
+            1e-4,
+            true,
+            true,
+            "submission",
+            2020.5,
+            0.0,
+        );
+        let parsed: serde_json::Value = serde_json::from_str(&out_json).unwrap();
+        let res_arr = parsed["results"].as_array().unwrap();
+        assert_eq!(res_arr.len(), 7);
+        let masked = res_arr[0]["masked_future_trunks"].as_array().unwrap();
+        assert!(
+            !masked.is_empty(),
+            "expected post-2020.5 SARS-CoV-2 founders to be masked under submission temporal guard"
+        );
     }
 }

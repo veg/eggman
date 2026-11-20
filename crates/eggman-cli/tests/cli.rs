@@ -136,6 +136,7 @@ fn cli_pack_flag_classifies_influenza_reassortant() {
         t_mrca: None,
         t_mrca_ci: None,
         first_sampled_year: None,
+        first_submitted_year: None,
         chronaeon_half_life_yr: None,
     };
     let spec = PathogenSpec {
@@ -175,6 +176,15 @@ fn cli_pack_flag_classifies_influenza_reassortant() {
         certification_criteria: String::new(),
         default_temporal_slack_yr: None,
         chronaeon_half_life_yr: None,
+        min_segment_identity: None,
+        gate2_min_dom_full: None,
+        gate2_min_dom_partial: None,
+        gate2_max_p_full: None,
+        gate2_max_p_partial: None,
+        gate3_min_stem_full: None,
+        gate3_min_stem_partial: None,
+        gate3_max_p_full: None,
+        gate3_max_p_partial: None,
     };
 
     const BASES: [u8; 4] = [b'A', b'C', b'G', b'T'];

@@ -1636,7 +1636,7 @@
         <summary>
           <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
             <span class="summary-title" style="font-size:13.5px;font-weight:700;">Breakpoint Thresholds</span>
-            <span class="badge mono" id="paramSummaryBadge">γ = 7.0 nats · ≥5 SNPs · p &lt; 1e-4</span>
+            <span class="badge mono" id="paramSummaryBadge">γ = 7.0 · ≥5 SNPs · p &lt; 1e-4</span>
           </div>
           <div style="display:flex;gap:6px;flex-wrap:wrap;">
             <button type="button" class="btn sm" onclick="event.stopPropagation(); applyParamPreset('default'); reapplyParams();">Default (γ=7.0, ≥5 SNPs)</button>
@@ -1649,7 +1649,7 @@
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;align-items:end;">
           <div>
-            <label class="control-group-label" style="display:block;">Switch penalty γ (nats; 0 = default 7.0)</label>
+            <label class="control-group-label" style="display:block;">Switch penalty γ (mismatch units; 0 = default 7.0)</label>
             <input type="number" class="input-field" style="width:100%;" id="paramGamma" value="0" min="0" max="40" step="0.5" />
           </div>
           <div>
@@ -1674,6 +1674,23 @@
               <input type="checkbox" id="paramMaskLoops" checked />
               Mask hypervariable loops
             </label>
+          </div>
+          <div>
+            <label style="display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;padding:7px 2px;cursor:pointer;">
+              <input type="checkbox" id="paramTemporalGuard" />
+              ChronAeon temporal guard
+            </label>
+          </div>
+          <div>
+            <label class="control-group-label" style="display:block;">Temporal floor mode</label>
+            <select class="input-field" style="width:100%;" id="paramTemporalMode">
+              <option value="sampled" selected>Sampled (collection / tMRCA)</option>
+              <option value="submission">Submission (0.0 yr slack)</option>
+            </select>
+          </div>
+          <div>
+            <label class="control-group-label" style="display:block;">Query year override (blank = header)</label>
+            <input type="number" class="input-field" style="width:100%;" id="paramQueryYear" placeholder="auto" min="1950" max="2035" step="0.1" />
           </div>
           <div>
             <button type="button" class="btn primary" style="width:100%;" onclick="reapplyParams()">Re-run Analysis</button>
@@ -2156,9 +2173,8 @@
     <div class="control-group-label" style="padding:2px 6px;">Reference Panel</div>
     <button type="button" class="popover-item" data-poppack="auto" onclick="selectPackFromPopover('auto')"><span>✨ Auto-detect Pathogen</span><span class="mono" style="font-size:10px;opacity:0.7;">auto</span></button>
     <button type="button" class="popover-item" data-poppack="hiv1" onclick="selectPackFromPopover('hiv1')"><span>HIV-1 Group M (HXB2)</span><span class="mono" style="font-size:10px;opacity:0.7;">hiv1</span></button>
-    <button type="button" class="popover-item" data-poppack="iav" onclick="selectPackFromPopover('iav')"><span>Influenza A (8-Segment)</span><span class="mono" style="font-size:10px;opacity:0.7;">iav</span></button>
-    <button type="button" class="popover-item" data-poppack="sc2" onclick="selectPackFromPopover('sc2')"><span>SARS-CoV-2 (11-Founder)</span><span class="mono" style="font-size:10px;opacity:0.7;">sc2</span></button>
-    <button type="button" class="popover-item" data-poppack="sc2_span16" onclick="loadSpanningSc2Pack()"><span>⚡ SARS-CoV-2 (16-Founder Span)</span><span class="badge orange" style="font-size:9px;padding:1px 5px;">v2</span></button>
+    <button type="button" class="popover-item" data-poppack="iav" onclick="selectPackFromPopover('iav')"><span>Influenza A H5Nx (8-Segment)</span><span class="mono" style="font-size:10px;opacity:0.7;">iav</span></button>
+    <button type="button" class="popover-item" data-poppack="sc2" onclick="selectPackFromPopover('sc2')"><span>SARS-CoV-2 (16-Wave Span)</span><span class="mono" style="font-size:10px;opacity:0.7;">sc2</span></button>
     <button type="button" class="popover-item" data-poppack="sarbeco" onclick="selectPackFromPopover('sarbeco')"><span>Sarbecovirus (Wildlife)</span><span class="mono" style="font-size:10px;opacity:0.7;">sarbeco</span></button>
     <div class="popover-divider"></div>
     <button type="button" class="popover-item" onclick="openCustomPackModal()"><span>📂 Load Custom PathogenSpec…</span></button>
@@ -2183,7 +2199,7 @@
 
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <div>
-        <label class="control-group-label" style="display:block;">Switch γ (nats; 0 = 7.0)</label>
+        <label class="control-group-label" style="display:block;">Switch γ (0 = 7.0)</label>
         <input type="number" class="input-field" style="width:100%;" id="popParamGamma" value="0" min="0" max="40" step="0.5" />
       </div>
       <div>
@@ -2202,6 +2218,24 @@
           <option value="0.0001">1e-4 (Standard)</option>
           <option value="0.00001">1e-5 (Strict)</option>
         </select>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border-subtle);">
+      <label style="grid-column:1 / -1;display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;cursor:pointer;">
+        <input type="checkbox" id="popParamTemporalGuard" />
+        ChronAeon non-lookahead temporal guard
+      </label>
+      <div>
+        <label class="control-group-label" style="display:block;">Temporal mode</label>
+        <select class="input-field" style="width:100%;" id="popParamTemporalMode">
+          <option value="sampled" selected>sampled</option>
+          <option value="submission">submission (0 yr)</option>
+        </select>
+      </div>
+      <div>
+        <label class="control-group-label" style="display:block;">Query year (opt.)</label>
+        <input type="number" class="input-field" style="width:100%;" id="popParamQueryYear" placeholder="auto" min="1950" max="2035" step="0.1" />
       </div>
     </div>
 
@@ -2243,7 +2277,7 @@
         Load a self-contained <code>PathogenProfilePack</code> JSON bundle or a bare <code>PathogenSpec</code> manifest + aligned reference <code>profiles.fasta</code>.
       </p>
       <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-        <button type="button" class="btn sm primary" onclick="closeModals(); loadSpanningSc2Pack();">⚡ Load 16-Founder SARS-CoV-2 Spanning Pack</button>
+        <button type="button" class="btn sm primary" onclick="closeModals(); loadSpanningSc2Pack();">⚡ Load Standalone SARS-CoV-2 Pack JSON</button>
         <label class="btn sm" style="cursor:pointer;">
           Choose Pack JSON…
           <input type="file" id="customPackJsonFile" accept=".json" class="hidden" onchange="readCustomPackFile(this, 'json')" />
@@ -2319,8 +2353,8 @@
         badgeClass: 'orange',
         gridLabel: '7 isolates × 13,136 nt',
         title: 'Avian & Dairy Cattle H5N1 8-Segment Reassortment Cohort',
-        desc: 'Applies 0-nat inter-segment transitions across clonal Eurasian founders (A1, A3) and reassortants (B3.13, D1.1, B3.6, D1.8). Genotype C2.1 stays URF when EA2/EA1 surface segments share fewer than 8 diagnostic stem SNPs.',
-        callout: 'D1.1: NAm_D1[EA3:PB1+HA+MP+NS] • C2.1 → URF',
+        desc: 'Applies 0-nat inter-segment transitions across clonal Eurasian founders (A1, A3) and reassortants (B3.13, D1.1, B3.6, D1.8, C2.1) with intra-segment crossovers blocked and 90% segment identity guards.',
+        callout: 'B3.13: NAm_B313[EA1:PA+HA+NA+MP] • D1.1: NAm_D1[EA3:PB1+HA+MP+NS] • C2.1 Certified',
         file: './examples/iav_reassortment.fasta',
         pack: 'auto',
       },
@@ -2330,7 +2364,7 @@
         badgeClass: 'purple',
         gridLabel: '7 genomes × 29,903 nt',
         title: 'Omicron Recombinants, Mislabelled BA.2 & 4-SNP XEC',
-        desc: 'Flags withheld Pango XDV (PQ287375.1) as URF with its parental coordinate formula, identifies PP272197.1 (filed as BA.2) as XBB.1.5 across ORF1ab, and resolves 4-SNP XEC under CoV 4-SNP thresholds.',
+        desc: 'Certifies recombinant XDV (PQ287375.1) in the 16-wave spanning pack, unmasks PP272197.1 (filed as BA.2) as XBB.1.5 across ORF1ab/S, and resolves 4-SNP XEC under CoV 4-SNP thresholds.',
         callout: 'PP272197.1: filed as BA.2 → BJ.1[BM.1.1.1:S..ORF10] (XBB.1.5)',
         file: './examples/sars_cov2_recomb.fasta',
         pack: 'auto',
@@ -2373,7 +2407,7 @@
         badge: 'PARTIAL ENV',
         badgeClass: 'blue',
         gridLabel: '5 partial env reads',
-        title: 'East African D[A1:env]@1986 Partial Envelope Cluster',
+        title: 'East African Convergent Partial Envelope Hotspot (A1/D gp41)',
         desc: 'Detects reciprocal gp41 breakpoints (HXB2 8250–8251) in ~1.8 kb partial env sequences outside standard pol drug-resistance amplicons.',
         callout: 'Reciprocal breakpoints detected in ~1.8 kb partial env sequences',
         file: './examples/partial_env.fasta',
@@ -2400,14 +2434,14 @@
         params: { gamma: 0, minSpan: 0, minSnps: 5, pThresh: 1e-4, maskLoops: true, segMode: 'auto' },
         steps: {
           stage0: {
-            text: 'Threshold: default (γ = 7.0 nats, ≥5 SNPs, p < 1e-4). Sixteen separate segment records sorted automatically into two complete 8-segment isolates (B3.13 and D1.1) across PB2–NS.',
+            text: 'Threshold: default (γ = 7.0, ≥5 SNPs, p < 1e-4). Sixteen separate segment records sorted automatically into two complete 8-segment isolates (B3.13 and D1.1) across PB2–NS.',
             chips: [
               { label: '🔍 View B3.13 Segment Details', fn: () => window.openStage0Drawer(0) },
               { label: '🔗 Keep Records Separate', fn: () => window.setSegMode('per_record') },
             ]
           },
           stage1: {
-            text: 'Each RNA segment is assigned without intra-segment switches (inter-segment transition penalty = 0 nats). B3.13 pairs North American PB2+PB1+NP+NS with Eurasian EA1 PA+HA+NA+MP.',
+            text: 'Each RNA segment is assigned without intra-segment switches (inter-segment transition penalty γ = 0). B3.13 pairs North American PB2+PB1+NP+NS with Eurasian EA1 PA+HA+NA+MP.',
             chips: [
               { label: '🧬 Open B3.13 Lineage Details', fn: () => window.openStage1Drawer(0) },
               { label: '🦅 Open D1.1 Lineage Details', fn: () => window.openStage1Drawer(1) },
@@ -2435,16 +2469,16 @@
         params: { gamma: 0, minSpan: 0, minSnps: 5, pThresh: 1e-4, maskLoops: true, segMode: 'auto' },
         steps: {
           stage0: {
-            text: 'Threshold: default (γ = 7.0 nats, ≥5 SNPs, p < 1e-4). Seven 29.9-kb coronavirus genomes matched the SARS-CoV-2 Wuhan-Hu-1 panel. Click below to apply CoV 4-SNP thresholds (γ = 3.5, ≥3 SNPs, p < 0.01) to resolve 4-SNP XEC (PV635430.1).',
+            text: 'Threshold: default (γ = 7.0, ≥5 SNPs, p < 1e-4). Seven 29.9-kb coronavirus genomes matched the SARS-CoV-2 Wuhan-Hu-1 panel. Click below to apply CoV 4-SNP thresholds (γ = 3.5, ≥3 SNPs, p < 0.01) to resolve 4-SNP XEC (PV635430.1).',
             chips: [
               { label: '⚡ Apply CoV 4-SNP Thresholds (Rescue XEC)', fn: () => { window.applyParamPreset('cov_low'); window.reapplyParams(); } },
             ]
           },
           stage1: {
-            text: 'PP272197.1 (filed in GenBank as BA.2) maps to XBB.1.5 across ORF1ab. PQ287375.1 (XDV, withheld from this 18-lineage panel) is called URF with formula BJ.1[JN.1:ORF1b..ORF10].',
+            text: 'PP272197.1 (filed in GenBank as BA.2) maps to XBB.1.5 across ORF1ab/S. PQ287375.1 resolves to XDV (BJ.1[JN.1:ORF1b..ORF10]) in the 28-profile Span-16 pack, while 4-SNP XEC resolves under CoV 4-SNP thresholds.',
             chips: [
               { label: '🔍 Open PP272197.1 (Mislabelled BA.2)', fn: () => window.openStage1ByPrefix('PP272197') },
-              { label: '🏷 Open PQ287375.1 (Withheld XDV URF)', fn: () => window.openStage1ByPrefix('PQ287375') },
+              { label: '🏷 Open PQ287375.1 (XDV)', fn: () => window.openStage1ByPrefix('PQ287375') },
               { label: '⚡ Apply CoV 4-SNP Thresholds (Rescue XEC)', fn: () => { window.applyParamPreset('cov_low'); window.reapplyParams(); } },
             ]
           },
@@ -2456,7 +2490,7 @@
             ]
           },
           stage3: {
-            text: 'Inspect the 18 SARS-CoV-2 lineages in the reference panel below, or download JSON and CSV tables.',
+            text: 'Inspect the 28 SARS-CoV-2 profiles (12 waves + 16 recombinants across 16 spanning Tier-1 founders) in the reference panel below, or download JSON and CSV tables.',
             chips: [
               { label: '📄 Download HTML Report', fn: () => window.downloadHTMLDossier() },
             ]
@@ -2470,7 +2504,7 @@
         params: { gamma: 0, minSpan: 0, minSnps: 5, pThresh: 1e-4, maskLoops: true, segMode: 'auto' },
         steps: {
           stage0: {
-            text: 'Threshold: default (γ = 7.0 nats, ≥5 SNPs, p < 1e-4). Sequences aligned to HIV-1 HXB2 (790..9417 nt) with pol resistance codons unmasked and V1–V5 hypervariable loops masked.',
+            text: 'Threshold: default (γ = 7.0, ≥5 SNPs, p < 1e-4). Sequences aligned to HIV-1 HXB2 (790..9417 nt) with pol resistance codons unmasked and V1–V5 hypervariable loops masked.',
             chips: [
               { label: '🔍 Open First Alignment Detail', fn: () => window.openStage0Drawer(0) },
             ]
@@ -2489,9 +2523,9 @@
             ]
           },
           stage3: {
-            text: 'Browse the 190 active HIV-1 Group M reference lineages (152 LANL/subtype references + 38 circulating clusters), or switch to Demoted LANL to audit the 10 collapsed/unverified entries.',
+            text: 'Browse the 152 active HIV-1 Group M callers within 171 catalogued entries (142 active LANL CRFs + 8 post-2023 CRFs + Subtype_G + monophyletic RU_G0B_gagMA), or switch to Demoted LANL to audit the 7 demoted entries.',
             chips: [
-              { label: '🔍 Filter All 38 Novel_Circulating Lineages', fn: () => { window.setS3AtlasFilter('all'); document.getElementById('atlasSearch').value = 'Novel_Circulating'; window.renderAtlasTable(); } },
+              { label: '🔍 Filter Candidate Regional CRF (RU_G0B_gagMA)', fn: () => { window.setS3AtlasFilter('all'); document.getElementById('atlasSearch').value = 'RU_G0B'; window.renderAtlasTable(); } },
             ]
           }
         }
@@ -2640,16 +2674,31 @@
       }
       if (type === 'screen') {
         const t0 = performance.now();
-        const raw = w.screen_with_pack(
-          payload.packId || 'auto',
-          payload.fastaText || '',
-          payload.segMode || 'auto',
-          Number(payload.gamma || 0),
-          Math.trunc(Number(payload.minSpan || 0)),
-          Math.trunc(Number(payload.minSnps || 5)),
-          Number(payload.pThresh || 1e-4),
-          Boolean(payload.maskLoops)
-        );
+        const raw = typeof w.screen_with_pack_and_temporal === 'function'
+          ? w.screen_with_pack_and_temporal(
+              payload.packId || 'auto',
+              payload.fastaText || '',
+              payload.segMode || 'auto',
+              Number(payload.gamma || 0),
+              Math.trunc(Number(payload.minSpan || 0)),
+              Math.trunc(Number(payload.minSnps || 5)),
+              Number(payload.pThresh || 1e-4),
+              Boolean(payload.maskLoops),
+              Boolean(payload.temporalGuard),
+              payload.temporalMode || 'sampled',
+              Number.isFinite(Number(payload.queryYear)) && Number(payload.queryYear) > 0 ? Number(payload.queryYear) : NaN,
+              Number.isFinite(Number(payload.temporalSlackYr)) && Number(payload.temporalSlackYr) >= 0 ? Number(payload.temporalSlackYr) : NaN
+            )
+          : w.screen_with_pack(
+              payload.packId || 'auto',
+              payload.fastaText || '',
+              payload.segMode || 'auto',
+              Number(payload.gamma || 0),
+              Math.trunc(Number(payload.minSpan || 0)),
+              Math.trunc(Number(payload.minSnps || 5)),
+              Number(payload.pThresh || 1e-4),
+              Boolean(payload.maskLoops)
+            );
         return { ok: true, type: 'screen', response: JSON.parse(raw), elapsedMs: performance.now() - t0 };
       }
       if (type === 'load_custom_pack') {
@@ -2698,17 +2747,29 @@
         Certified_CRF: 'Catalogued CRF',
         Certified_Reassortant: 'Catalogued Reassortant',
         Novel_Circulating_CRF: 'Novel Circulating CRF',
+        Novel_Circulating_Full: 'Novel Circulating CRF',
         Novel_Circulating: 'Novel Circulating',
         Validated_Basal_Trunk: 'Parental Reference',
         URF: 'Uncatalogued (URF)',
+        OutOfPanel: 'Out of Panel (Divergent / Temporal Guard)',
         Unclassifiable: 'Unclassifiable',
       };
       return map[cat] || String(cat || '').replace(/_/g, ' ');
     }
 
+    function badgeClassForResult(r) {
+      if (!r) return '';
+      const cat = r.called_category || (r.is_clonal ? 'Pure_Subtype' : 'URF');
+      if (r.n_segments === 0 || cat === 'Unclassifiable') return 'danger';
+      if (cat === 'OutOfPanel' || r.called_lineage === 'OutOfPanel') return 'amber';
+      if (cat === 'URF') return 'orange';
+      return 'green';
+    }
+
     function classifyResultBucket(r) {
       const cat = r.called_category || (r.is_clonal ? 'Pure_Subtype' : 'URF');
       if (r.n_segments === 0 || cat === 'Unclassifiable') return 'unclass';
+      if (cat === 'OutOfPanel' || r.called_lineage === 'OutOfPanel') return 'outofpanel';
       if (cat === 'URF') return 'urf';
       if (
         cat === 'Pure_Subtype'
@@ -3090,6 +3151,9 @@
         ['paramMinSnps', 'popParamMinSnps', 'value'],
         ['paramPThresh', 'popParamPThresh', 'value'],
         ['paramMaskLoops', 'popParamMaskLoops', 'checked'],
+        ['paramTemporalGuard', 'popParamTemporalGuard', 'checked'],
+        ['paramTemporalMode', 'popParamTemporalMode', 'value'],
+        ['paramQueryYear', 'popParamQueryYear', 'value'],
       ];
       pairs.forEach(([s0Id, popId, prop]) => {
         const s0 = document.getElementById(s0Id);
@@ -3115,7 +3179,10 @@
       const snpFlag = ` --min-snps ${p.minSnps}`;
       const pFlag = ` --p-thresh ${p.pThresh}`;
       const loopFlag = p.maskLoops ? '' : ' --no-loop-mask';
-      return `eggman${packFlag}${gammaFlag}${spanFlag}${snpFlag}${pFlag}${loopFlag} --json audit.json input.fasta`;
+      const tgFlag = p.temporalGuard
+        ? ` --temporal-guard --temporal-mode ${p.temporalMode || 'sampled'}${p.queryYear > 0 ? ` --query-year ${p.queryYear}` : ''}`
+        : '';
+      return `eggman${packFlag}${gammaFlag}${spanFlag}${snpFlag}${pFlag}${loopFlag}${tgFlag} --json audit.json input.fasta`;
     }
 
     window.copyCliCommand = function() {
@@ -3128,13 +3195,14 @@
       syncParamInputsFromSource(false);
       const p = readParamsFromUI();
       const gEff = p.gamma === 0 ? 7.0 : p.gamma;
-      const txt = `γ = ${gEff.toFixed(1)} nats · ≥${p.minSnps} SNPs · p < ${p.pThresh.toExponential(0).replace('e-0', 'e-')}`;
+      const tgTag = p.temporalGuard ? ` · guard:${p.temporalMode}` : '';
+      const txt = `γ = ${gEff.toFixed(1)} · ≥${p.minSnps} SNPs · p < ${p.pThresh.toExponential(0).replace('e-0', 'e-')}${tgTag}`;
       const badge = document.getElementById('paramSummaryBadge');
       if (badge) badge.textContent = txt;
       const topBtn = document.getElementById('topParamsBtn');
       if (topBtn) {
         topBtn.textContent = `⚙ ${txt} ▾`;
-        const isTuned = (p.gamma !== 0 && p.gamma !== 7) || p.minSnps !== 5 || p.pThresh !== 1e-4 || p.minSpan > 0 || !p.maskLoops;
+        const isTuned = (p.gamma !== 0 && p.gamma !== 7) || p.minSnps !== 5 || p.pThresh !== 1e-4 || p.minSpan > 0 || !p.maskLoops || p.temporalGuard;
         topBtn.classList.toggle('tuned', isTuned);
       }
       const cliEl = document.getElementById('cliCommandPreview');
@@ -3143,7 +3211,9 @@
 
     function readParamsFromUI() {
       const num = (id, dflt) => {
-        const v = Number(document.getElementById(id).value);
+        const el = document.getElementById(id);
+        if (!el || el.value === '') return dflt;
+        const v = Number(el.value);
         return Number.isFinite(v) && v >= 0 ? v : dflt;
       };
       return {
@@ -3152,6 +3222,9 @@
         minSnps: Math.max(2, Math.trunc(num('paramMinSnps', 5))),
         pThresh: parseFloat(document.getElementById('paramPThresh').value) || 1e-4,
         maskLoops: document.getElementById('paramMaskLoops').checked,
+        temporalGuard: Boolean(document.getElementById('paramTemporalGuard')?.checked),
+        temporalMode: document.getElementById('paramTemporalMode')?.value || 'sampled',
+        queryYear: num('paramQueryYear', 0),
       };
     }
 
@@ -3369,6 +3442,9 @@
           minSnps: p.minSnps,
           pThresh: p.pThresh,
           maskLoops: p.maskLoops,
+          temporalGuard: p.temporalGuard,
+          temporalMode: p.temporalMode,
+          queryYear: p.queryYear,
         });
         state.running = false;
         hideLoadingModal();
@@ -3550,7 +3626,7 @@
           }).join('');
           const res = results[idx];
           const initCall = res ? res.called_lineage : '—';
-          const callCls = !res ? '' : ((res.n_segments === 0 || res.called_category === 'Unclassifiable') ? 'danger' : (res.called_category === 'URF' ? 'orange' : 'green'));
+          const callCls = badgeClassForResult(res);
           return `
             <tr class="clickable" onclick="openStage0Drawer(${idx})">
               <td class="mono" style="font-weight:600;max-width:210px;word-break:break-all;">${escapeHtml(iso.isolate_id)}</td>
@@ -3577,9 +3653,7 @@
       const qaSlice = qaList.slice((state.s0QaPage - 1) * state.s0QaPageSize, state.s0QaPage * state.s0QaPageSize);
 
       document.getElementById('s0QaTableBody').innerHTML = qaSlice.map(({ r, idx }) => {
-        const badgeClass = (r.n_segments === 0 || r.called_category === 'Unclassifiable')
-          ? 'danger'
-          : (r.called_category === 'URF' ? 'orange' : 'green');
+        const badgeClass = badgeClassForResult(r);
         return `
           <tr class="clickable" onclick="openStage0Drawer(${idx})">
             <td class="mono" style="font-weight:600;max-width:260px;word-break:break-all;">${escapeHtml(r.sequence_id)}</td>
@@ -3692,24 +3766,26 @@
       const meta = resp.pack_meta;
       const results = resp.results || [];
 
-      let nUnclass = 0, nUrf = 0, nCertified = 0, nClonal = 0;
+      let nUnclass = 0, nUrf = 0, nOop = 0, nCertified = 0, nClonal = 0;
       results.forEach(r => {
         const b = classifyResultBucket(r);
         if (b === 'unclass') nUnclass += 1;
+        else if (b === 'outofpanel') nOop += 1;
         else if (b === 'urf') nUrf += 1;
         else if (b === 'clonal') nClonal += 1;
         else nCertified += 1;
       });
 
       document.getElementById('s1PackBadge').textContent = `${PACK_LABELS[resp.active_pack] || meta.pathogen_name} • ${meta.reference_name}`;
-      document.getElementById('s1Headline').textContent = `${nClonal} Clonal • ${nCertified} Catalogued Recombinants/Reassortants • ${nUrf} Uncatalogued (URF)`;
+      const oopTxt = nOop > 0 ? ` • ${nOop} OutOfPanel` : '';
+      document.getElementById('s1Headline').textContent = `${nClonal} Clonal • ${nCertified} Catalogued Recombinants/Reassortants • ${nUrf} Uncatalogued (URF)${oopTxt}`;
       document.getElementById('s1Subheadline').textContent = `Reference coordinate maps on ${meta.reference_name} (${meta.coding_start}..${meta.coding_end} nt). Click any row or card for segment coordinates and statistical support.`;
 
       document.getElementById('s1KpiGrid').innerHTML = `
         <div class="kpi-box"><div class="metric-caption">Sequences</div><div class="metric-num">${results.length}</div><div class="metric-sub">${meta.is_segmented ? '8-segment scaffolds' : 'Whole / partial genomes'}</div></div>
         <div class="kpi-box"><div class="metric-caption">Clonal</div><div class="metric-num">${nClonal}</div><div class="metric-sub">Single-lineage calls</div></div>
         <div class="kpi-box"><div class="metric-caption">Catalogued Recomb / Reassort</div><div class="metric-num">${nCertified}</div><div class="metric-sub">All 4 clade gates passed</div></div>
-        <div class="kpi-box"><div class="metric-caption">Uncatalogued (URF)</div><div class="metric-num">${nUrf}</div><div class="metric-sub">${nUnclass} unclassifiable</div></div>
+        <div class="kpi-box"><div class="metric-caption">Uncatalogued (URF)</div><div class="metric-num">${nUrf}</div><div class="metric-sub">${nOop} OutOfPanel · ${nUnclass} unclassifiable</div></div>
         <div class="kpi-box"><div class="metric-caption">Runtime</div><div class="metric-num">${state.elapsedMs.toFixed(1)} ms</div><div class="metric-sub">${state.elapsedMs > 0 ? Math.round((results.length * 1000) / state.elapsedMs).toLocaleString() : '—'} seq/s</div></div>
       `;
 
@@ -3991,7 +4067,7 @@
           ? pageSlice.map(({ r, idx }) => {
               const cat = r.called_category || (r.is_clonal ? 'Pure_Subtype' : 'URF');
               const lin = r.called_lineage || r.backbone_trunk;
-              const pillClass = (r.n_segments === 0 || cat === 'Unclassifiable') ? 'danger' : (cat === 'URF' ? 'orange' : 'green');
+              const pillClass = badgeClassForResult(r);
               const bc = state.trackMode === 'basal' ? r.hxb2_barcode : (r.epidemiological_barcode || r.hxb2_barcode);
               const sup = r.call_support;
               const supShort = sup ? `${sup.identity_pct.toFixed(1)}% • ${r.n_breakpoints} BPs` : `${r.n_breakpoints} BPs`;
@@ -4027,14 +4103,14 @@
       cardsContainer.innerHTML = cardSlice.map(({ r, idx }) => {
         const cat = r.called_category || (r.is_clonal ? 'Pure_Subtype' : 'URF');
         const lin = r.called_lineage || r.backbone_trunk;
-        const pillClass = (r.n_segments === 0 || cat === 'Unclassifiable')
-          ? 'danger'
-          : (cat === 'URF' ? 'orange' : 'green');
+        const pillClass = badgeClassForResult(r);
         const pillLabel = (r.n_segments === 0 || cat === 'Unclassifiable')
           ? 'Unclassifiable'
-          : (cat === 'URF'
-            ? `URF (${r.n_breakpoints} Breakpoint${r.n_breakpoints === 1 ? '' : 's'})`
-            : `${lin} [${formatCategory(cat)}]`);
+          : (cat === 'OutOfPanel' || lin === 'OutOfPanel'
+            ? 'OutOfPanel (Divergent / Guarded)'
+            : (cat === 'URF'
+              ? `URF (${r.n_breakpoints} Breakpoint${r.n_breakpoints === 1 ? '' : 's'})`
+              : `${lin} [${formatCategory(cat)}]`));
 
         const epiBc = r.epidemiological_barcode || r.hxb2_barcode;
         const hasDual = epiBc && r.hxb2_barcode && epiBc !== r.hxb2_barcode && state.trackMode === 'epi';
@@ -4152,7 +4228,7 @@
 
       document.getElementById('s2PackBadge').textContent = `${PACK_LABELS[resp.active_pack] || meta.pathogen_name}`;
       document.getElementById('s2Headline').textContent = `${allBps.length} Breakpoint${allBps.length === 1 ? '' : 's'} Across ${nMosaicIso} Sequence(s)`;
-      document.getElementById('s2Subheadline').textContent = `Each breakpoint passes the log-likelihood switch penalty γ, minimum segment length, minimum informative SNPs, and a two-sided 2×2 Fisher's exact test.`;
+      document.getElementById('s2Subheadline').textContent = `Each breakpoint passes the switch penalty γ, minimum segment length, minimum informative SNPs, and a one-sided upper-tail 2×2 Fisher's exact test.`;
       document.getElementById('s2GridSpanBadge').textContent = `${meta.reference_name} ${meta.coding_start}..${meta.coding_end} nt`;
 
       document.getElementById('s2KpiGrid').innerHTML = `
@@ -4726,11 +4802,17 @@
         `<span class="badge" style="margin:2px;font-size:10px;">${escapeHtml(m.label)} (${escapeHtml(m.match_type)})</span>`
       ).join('');
 
+      const maskedArr = Array.isArray(r.masked_future_trunks) ? r.masked_future_trunks : [];
+      const tgBadgeHtml = (r.query_year != null || maskedArr.length > 0)
+        ? `<span class="badge amber">⏱ Guard${r.query_year != null ? ` @ ${Number(r.query_year).toFixed(2)}` : ''}${maskedArr.length ? ` · masked ${maskedArr.length} future trunk${maskedArr.length === 1 ? '' : 's'}` : ''}</span>`
+        : '';
+
       return `
         <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px;">
           <span class="badge blue">${escapeHtml(meta.pathogen_name)}</span>
-          <span class="badge ${r.called_category === 'URF' ? 'orange' : (r.called_category === 'Unclassifiable' ? 'danger' : 'green')}">${escapeHtml(r.called_lineage)} [${escapeHtml(formatCategory(r.called_category))}]</span>
+          <span class="badge ${badgeClassForResult(r)}">${escapeHtml(r.called_lineage)} [${escapeHtml(formatCategory(r.called_category))}]</span>
           <span class="badge">${escapeHtml(r.locus_scope)} (${r.hxb2_span_start}..${r.hxb2_span_end})</span>
+          ${tgBadgeHtml}
         </div>
         <div class="formula-strip">
           <div><div class="metric-caption">Circulating Lineage Formula</div><div class="mono" style="font-size:12px;color:var(--orange);font-weight:700;">${escapeHtml(r.epidemiological_formula || r.descriptive_name)}</div></div>
@@ -4807,7 +4889,7 @@
           </table>
         </div>
         <p style="font-size:12px;color:var(--ink-secondary);margin-top:12px;">
-          A breakpoint is accepted only when it passes switch penalty γ, minimum segment length, minimum informative SNPs per side, and the Bonferroni-corrected two-sided Fisher's exact test.
+          A breakpoint is accepted only when it passes switch penalty γ, minimum segment length, minimum informative SNPs per side, and the one-sided upper-tail 2×2 Fisher's exact test.
         </p>
         <div style="margin-top:12px;">
           <button class="btn sm" onclick="openStage1Drawer(${rIdx})">View Sequence Details →</button>
@@ -5236,7 +5318,7 @@
           ? slice.map(({ r, idx }) => {
               const cat = r.called_category || (r.is_clonal ? 'Pure_Subtype' : 'URF');
               const lin = r.called_lineage || r.backbone_trunk;
-              const pill = (r.n_segments === 0 || cat === 'Unclassifiable') ? 'danger' : (cat === 'URF' ? 'orange' : 'green');
+              const pill = badgeClassForResult(r);
               const formula = state.trackMode === 'basal' ? (r.basal_formula || r.descriptive_name) : (r.epidemiological_formula || r.descriptive_name);
               const bc = state.trackMode === 'basal' ? r.hxb2_barcode : (r.epidemiological_barcode || r.hxb2_barcode);
               const sup = r.call_support;
@@ -5359,7 +5441,7 @@
             `<td><span class="seg-slot-pill ${s.present ? 'ok' : 'miss'}" style="min-width:42px;font-size:9.5px;">${s.present ? s.mapped_nt : '—'}</span></td>`
           ).join('');
           const r = results[idx];
-          const cls = !r ? '' : (r.called_category === 'URF' ? 'orange' : 'green');
+          const cls = badgeClassForResult(r);
           return `<tr class="clickable ${state.selectedSeqIdx === idx ? 'wb-selected' : ''}" onclick="selectWorkbenchSeq(${idx})"><td class="mono" style="font-weight:600;max-width:150px;word-break:break-all;">${escapeHtml(iso.isolate_id)}</td><td class="num">${iso.n_segments_present}/${iso.total_segments}</td>${slots}<td><span class="badge ${cls}" style="font-size:10px;">${escapeHtml(r?.called_lineage || '—')}</span></td></tr>`;
         }).join('');
         pager.innerHTML = renderPager(isoList.length, state.wbPage, state.wbPageSize, 'setWbPage', 'setWbPageSize', [25, 50, 100]);
@@ -5578,10 +5660,12 @@
     window.exportCSV = function() {
       const results = state.response?.results || [];
       if (!results.length) return;
-      const header = "sequence_id,pathogen_pack,raw_length_nt,mapped_coding_nt,span_start,span_end,locus_scope,alignment_mode,called_lineage,called_category,call_identity_pct,call_stem_snps,call_p_value,epidemiological_formula,epidemiological_barcode,basal_formula,basal_barcode,descriptive_name,structural_formula,backbone_trunk,n_segments,n_breakpoints,barcode,ci_bracketed_barcode,compendium_matches\n";
+      const header = "sequence_id,pathogen_pack,raw_length_nt,mapped_coding_nt,span_start,span_end,locus_scope,alignment_mode,called_lineage,called_category,call_identity_pct,call_stem_snps,call_p_value,epidemiological_formula,epidemiological_barcode,basal_formula,basal_barcode,descriptive_name,structural_formula,backbone_trunk,n_segments,n_breakpoints,barcode,ci_bracketed_barcode,compendium_matches,query_year,masked_future_trunks\n";
       const rows = results.map(r => {
         const m = (r.matches || []).map(x => `${x.label} (${x.descriptive_name})`).join('; ');
         const sup = r.call_support || null;
+        const qy = r.query_year != null ? Number(r.query_year).toFixed(4) : '';
+        const masked = Array.isArray(r.masked_future_trunks) ? r.masked_future_trunks.join(';') : '';
         return [
           csvField(r.sequence_id), csvField(state.response.active_pack), r.raw_length_nt, r.mapped_coding_nt,
           r.hxb2_span_start, r.hxb2_span_end, csvField(r.locus_scope), csvField(r.alignment_mode),
@@ -5590,7 +5674,8 @@
           csvField(r.epidemiological_formula || ''), csvField(r.epidemiological_barcode || ''),
           csvField(r.basal_formula || r.descriptive_name), csvField(r.basal_barcode || r.hxb2_barcode),
           csvField(r.descriptive_name), csvField(r.structural_formula), csvField(r.backbone_trunk),
-          r.n_segments, r.n_breakpoints, csvField(r.hxb2_barcode), csvField(r.ci_bracketed_barcode), csvField(m)
+          r.n_segments, r.n_breakpoints, csvField(r.hxb2_barcode), csvField(r.ci_bracketed_barcode), csvField(m),
+          qy, csvField(masked)
         ].join(',');
       }).join('\n');
       downloadBlob(header + rows, `eggman_${state.response.active_pack}_results.csv`, 'text/csv');
@@ -5705,12 +5790,12 @@
       document.getElementById('btnOpenExamples').onclick = (e) => { e.stopPropagation(); document.getElementById('examplesModal').classList.remove('hidden'); };
       document.getElementById('btnTopGuide').onclick = () => openGuideDrawer();
 
-      ['paramGamma', 'paramMinSpan', 'paramMinSnps', 'paramPThresh', 'paramMaskLoops'].forEach(id => {
+      ['paramGamma', 'paramMinSpan', 'paramMinSnps', 'paramPThresh', 'paramMaskLoops', 'paramTemporalGuard', 'paramTemporalMode', 'paramQueryYear'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('change', syncParamSummaryBadge);
       });
 
-      ['popParamGamma', 'popParamMinSpan', 'popParamMinSnps', 'popParamPThresh', 'popParamMaskLoops'].forEach(id => {
+      ['popParamGamma', 'popParamMinSpan', 'popParamMinSnps', 'popParamPThresh', 'popParamMaskLoops', 'popParamTemporalGuard', 'popParamTemporalMode', 'popParamQueryYear'].forEach(id => {
         const el = document.getElementById(id);
         if (el) {
           el.addEventListener('change', () => {

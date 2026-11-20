@@ -44,16 +44,31 @@ self.onmessage = async (ev) => {
 
     if (type === 'screen') {
       const t0 = performance.now();
-      const raw = wasm.screen_with_pack(
-        payload.packId || 'auto',
-        payload.fastaText || '',
-        payload.segMode || 'auto',
-        Number(payload.gamma || 0),
-        Math.trunc(Number(payload.minSpan || 0)),
-        Math.trunc(Number(payload.minSnps || 5)),
-        Number(payload.pThresh || 1e-4),
-        Boolean(payload.maskLoops)
-      );
+      const raw = typeof wasm.screen_with_pack_and_temporal === 'function'
+        ? wasm.screen_with_pack_and_temporal(
+            payload.packId || 'auto',
+            payload.fastaText || '',
+            payload.segMode || 'auto',
+            Number(payload.gamma || 0),
+            Math.trunc(Number(payload.minSpan || 0)),
+            Math.trunc(Number(payload.minSnps || 5)),
+            Number(payload.pThresh || 1e-4),
+            Boolean(payload.maskLoops),
+            Boolean(payload.temporalGuard),
+            payload.temporalMode || 'sampled',
+            Number.isFinite(Number(payload.queryYear)) && Number(payload.queryYear) > 0 ? Number(payload.queryYear) : NaN,
+            Number.isFinite(Number(payload.temporalSlackYr)) && Number(payload.temporalSlackYr) >= 0 ? Number(payload.temporalSlackYr) : NaN
+          )
+        : wasm.screen_with_pack(
+            payload.packId || 'auto',
+            payload.fastaText || '',
+            payload.segMode || 'auto',
+            Number(payload.gamma || 0),
+            Math.trunc(Number(payload.minSpan || 0)),
+            Math.trunc(Number(payload.minSnps || 5)),
+            Number(payload.pThresh || 1e-4),
+            Boolean(payload.maskLoops)
+          );
       const elapsedMs = performance.now() - t0;
       const response = JSON.parse(raw);
       self.postMessage({ reqId, ok: true, type: 'screen', response, elapsedMs });

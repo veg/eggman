@@ -13,7 +13,7 @@ export class WasmEggman {
      */
     export_pack_bundle_json(pack_id: string): string;
     /**
-     * Return the embedded HIV-1 200-lineage reference compendium as a JSON array.
+     * Return the embedded HIV-1 171-lineage reference compendium as a JSON array.
      */
     get_compendium_json(): string;
     /**
@@ -34,6 +34,12 @@ export class WasmEggman {
      * automatically assembling multi-record Influenza A segments (`seg_mode`: `"auto"`, `"single_isolate"`, `"per_record"`).
      */
     screen_with_pack(pack_id: string, fasta_text: string, seg_mode: string, gamma: number, min_span_nt: number, min_informative_snps: number, p_fisher_thresh: number, mask_hypervariable_loops: boolean): string;
+    /**
+     * Screen a FASTA string with optional ChronAeon non-lookahead temporal guarding
+     * (`temporal_mode`: `"sampled"` or `"submission"`; pass `<= 0` or `NaN` for `query_year` to parse from FASTA headers,
+     * and `< 0` or `NaN` for `temporal_slack_yr` to use pack/mode defaults).
+     */
+    screen_with_pack_and_temporal(pack_id: string, fasta_text: string, seg_mode: string, gamma: number, min_span_nt: number, min_informative_snps: number, p_fisher_thresh: number, mask_hypervariable_loops: boolean, temporal_guard: boolean, temporal_mode: string, query_year: number, temporal_slack_yr: number): string;
 }
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
@@ -49,6 +55,7 @@ export interface InitOutput {
     readonly wasmeggman_new: () => number;
     readonly wasmeggman_screen_fasta: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
     readonly wasmeggman_screen_with_pack: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number) => [number, number];
+    readonly wasmeggman_screen_with_pack_and_temporal: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number, n: number, o: number, p: number, q: number) => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

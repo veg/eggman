@@ -50,7 +50,7 @@ export class WasmEggman {
         }
     }
     /**
-     * Return the embedded HIV-1 200-lineage reference compendium as a JSON array.
+     * Return the embedded HIV-1 171-lineage reference compendium as a JSON array.
      * @returns {string}
      */
     get_compendium_json() {
@@ -190,6 +190,61 @@ export class WasmEggman {
             return getStringFromWasm0(ret[0], ret[1]);
         } finally {
             wasm.__wbindgen_free(deferred9_0, deferred9_1, 1);
+        }
+    }
+    /**
+     * Screen a FASTA string with optional ChronAeon non-lookahead temporal guarding
+     * (`temporal_mode`: `"sampled"` or `"submission"`; pass `<= 0` or `NaN` for `query_year` to parse from FASTA headers,
+     * and `< 0` or `NaN` for `temporal_slack_yr` to use pack/mode defaults).
+     * @param {string} pack_id
+     * @param {string} fasta_text
+     * @param {string} seg_mode
+     * @param {number} gamma
+     * @param {number} min_span_nt
+     * @param {number} min_informative_snps
+     * @param {number} p_fisher_thresh
+     * @param {boolean} mask_hypervariable_loops
+     * @param {boolean} temporal_guard
+     * @param {string} temporal_mode
+     * @param {number} query_year
+     * @param {number} temporal_slack_yr
+     * @returns {string}
+     */
+    screen_with_pack_and_temporal(pack_id, fasta_text, seg_mode, gamma, min_span_nt, min_informative_snps, p_fisher_thresh, mask_hypervariable_loops, temporal_guard, temporal_mode, query_year, temporal_slack_yr) {
+        let deferred13_0;
+        let deferred13_1;
+        try {
+            const val5 = +gamma;
+            const val6 = +min_span_nt;
+            const val7 = +min_informative_snps;
+            const val8 = +p_fisher_thresh;
+            const val9 = +mask_hypervariable_loops;
+            const val10 = +temporal_guard;
+            const val11 = +query_year;
+            const val12 = +temporal_slack_yr;
+            let ptr0, len0, ptr1, len1, ptr2, len2, ptr3, len3;
+            try {
+                ptr0 = passStringToWasm0(pack_id, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len0 = WASM_VECTOR_LEN;
+                ptr1 = passStringToWasm0(fasta_text, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len1 = WASM_VECTOR_LEN;
+                ptr2 = passStringToWasm0(seg_mode, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len2 = WASM_VECTOR_LEN;
+                ptr3 = passStringToWasm0(temporal_mode, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+                len3 = WASM_VECTOR_LEN;
+            } catch (e) {
+                if (ptr3) { wasm.__wbindgen_free(ptr3, len3 * 1, 1); }
+                if (ptr2) { wasm.__wbindgen_free(ptr2, len2 * 1, 1); }
+                if (ptr1) { wasm.__wbindgen_free(ptr1, len1 * 1, 1); }
+                if (ptr0) { wasm.__wbindgen_free(ptr0, len0 * 1, 1); }
+                throw e;
+            }
+            const ret = wasm.wasmeggman_screen_with_pack_and_temporal(this.__wbg_ptr, ptr0, len0, ptr1, len1, ptr2, len2, val5, val6, val7, val8, val9, val10, ptr3, len3, val11, val12);
+            deferred13_0 = ret[0];
+            deferred13_1 = ret[1];
+            return getStringFromWasm0(ret[0], ret[1]);
+        } finally {
+            wasm.__wbindgen_free(deferred13_0, deferred13_1, 1);
         }
     }
 }
